@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trailhead Math</title>
+<meta name="description" content="A math adventure game for 5th grade: learn each skill, practice it, then beat the boss.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cpolygon fill='%232F6F96' points='2,50 22,20 36,38 44,28 54,50'/%3E%3Cpolygon fill='%231F6B4F' points='6,50 26,12 46,50'/%3E%3Cpolygon fill='%23E8962A' points='27,4 36,7 27,10'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<header class="hud" id="hud" hidden>
+  <div class="hud-in">
+    <button class="me" id="hudMe" title="Change buddy in the shop">
+      <span class="face" id="hudFace">🐐</span>
+      <span class="me-txt"><b id="hudName">Hiker</b><small id="hudTitle">Scout</small></span>
+    </button>
+    <div class="xp" aria-label="Experience">
+      <div class="xp-top"><span>Level <b id="hudLvl">1</b></span><span id="hudXp">0 / 100 XP</span></div>
+      <div class="xp-bar"><span id="hudXpFill"></span></div>
+    </div>
+    <div class="coins" aria-label="Coins"><span class="coin"></span><b id="hudCoins">0</b></div>
+    <nav class="hud-nav">
+      <button class="iconbtn" id="navMap" title="Trail map" aria-label="Trail map"><svg viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z M9 3v15 M15 6v15"/></svg></button>
+      <button class="iconbtn" id="navShop" title="Buddy shop" aria-label="Buddy shop"><svg viewBox="0 0 24 24"><path d="M4 9h16l-1.5 11h-13z M8 9V7a4 4 0 0 1 8 0v2"/></svg></button>
+      <button class="iconbtn" id="navSound" title="Sound on/off" aria-label="Sound on or off"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="soundWave" d="M16 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11"/></svg></button>
+      <button class="iconbtn" id="navParents" title="For grown-ups" aria-label="For grown-ups"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Welcome -->
+  <section id="sStart" class="screen start" hidden>
+    <svg class="start-art" viewBox="0 0 400 170" aria-hidden="true">
+      <polygon class="m2" points="0,170 90,70 150,120 230,40 320,110 400,60 400,170"/>
+      <polygon class="m1" points="40,170 200,20 360,170"/>
+      <polygon class="snow" points="200,20 178,40 192,36 200,46 210,36 222,40"/>
+      <rect class="flagpole" x="199" y="0" width="2" height="22"/><polygon class="flag" points="201,1 216,6 201,11"/>
+    </svg>
+    <h1>Trailhead Math</h1>
+    <p class="lead">Climb the mountain one camp at a time. At every camp you <b>learn</b> a new skill, <b>practice</b> it, then <b>battle a boss</b> to unlock the next camp.</p>
+    <form id="startForm" class="start-form" autocomplete="off">
+      <label for="nameIn">What's your hiker name?</label>
+      <input id="nameIn" maxlength="16" placeholder="Type your name">
+      <p class="label">Pick your trail buddy:</p>
+      <div class="starters" id="starters"></div>
+      <button class="btn big" type="submit">Start climbing</button>
+    </form>
+  </section>
+
+  <!-- Map -->
+  <section id="sMap" class="screen map-screen" hidden>
+    <aside class="side">
+      <div class="card goal" id="goalCard"></div>
+      <div class="card legend">
+        <h3>How to climb</h3>
+        <ol class="howto"><li><b>Learn</b> the skill in the Field Guide.</li><li><b>Practice</b> 8 questions to earn stars.</li><li><b>Beat the boss</b> (or get 2 stars) to unlock the next camp.</li><li>Spend coins on new buddies in the shop.</li></ol>
+      </div>
+    </aside>
+    <div class="mapbox"><svg id="mapSvg" viewBox="0 0 400 980" role="img" aria-label="Trail map with 9 camps and the summit"></svg></div>
+  </section>
+
+  <section id="sCamp" class="screen" hidden></section>
+  <section id="sLesson" class="screen panel" hidden></section>
+
+  <!-- Play: practice, boss, lightning -->
+  <section id="sPlay" class="screen panel" hidden>
+    <div class="playbar">
+      <button class="btn ghost small" id="quitBtn">Leave</button>
+      <div id="playHud" class="playhud"></div>
+    </div>
+    <div id="arena" class="arena" hidden></div>
+    <div class="qcard">
+      <p class="qnum" id="qnum"></p>
+      <div class="qtext" id="qtext"></div>
+    </div>
+    <form class="answer" id="ansForm" autocomplete="off">
+      <input id="ans" aria-label="Your answer" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn" id="goBtn" type="submit">Check</button>
+      <button class="btn ghost" id="hintBtn" type="button">Hint</button>
+    </form>
+    <p class="fmt" id="fmt"></p>
+    <div id="fb" aria-live="polite"></div>
+  </section>
+
+  <section id="sResult" class="screen panel result" hidden></section>
+  <section id="sShop" class="screen panel" hidden></section>
+  <section id="sParents" class="screen panel" hidden></section>
+</main>
+
+<script src="js/util.js"></script>
+<script src="js/units.js"></script>
+<script src="js/lessons.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
