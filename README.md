@@ -60,6 +60,13 @@ Levels 4–8 use **real Lua**, the language Roblox games are built on (Roblox us
 - **Collecting**: 44 characters in five rarities (rarer ones give coin, crit-time and heart bonuses), 6 permanent relics, 18 badges, and capsules. Everything is earned by playing. Nothing is for sale.
 - **Elite rematches**: beat a boss, then fight a tougher version for a capsule and an extra star.
 - A neon restyle.
+- **Echo, show me how**: after a wrong answer, Echo walks through that exact question step by step, with its own numbers (and a drawing for some question types).
+- **Adaptive mixing**: the game tracks what gets missed and asks it more often in Titan fights, the Grid, Speed Run and raids. The **Weak Spot Drill** is 8 questions on the three shakiest topics.
+- **Character power-ups**: a duplicate adds a star to the character (up to 5), and each star adds +5% coins.
+- **Weekly Raid**: a new 320 HP boss every week, with a character that can only be won that week.
+- **Obby Builder**: 5 courses where real Lua (`walk`, `jump`, `gapAhead`, `atFlag`) runs a character over lava. The later courses are random, so the code has to use loops and ifs.
+- **Grown-up report**: the last 7 days of questions, accuracy and minutes, strongest and weakest topics, and a copy-as-text button.
+- **Transfer code**: copy progress from one device and paste it on another. No account needed.
 
 ## How a level works
 
@@ -92,7 +99,8 @@ js/code.js          Lua runner, code editor, robot puzzle engine, Code Lab level
 js/ai.js            AI Academy lessons, labs, question banks
 js/ai2.js           AI Academy levels 7 to 12
 js/explore.js       the Grid map, wild characters, relics, capsules, badges, Codex
-js/guide.js         Echo: pointer tours and animated explainers
+js/guide.js         Echo: pointer tours, animated explainers, step-by-step solving
+js/extras.js        adaptive mixing, weak-spot drill, weekly raid, Obby Builder, report, transfer code
 js/app.js           screens: lobby, maps, levels, battles, shop, Star Road
 vendor/fengari-web.js   Lua 5.3 in the browser (MIT license)
 ```

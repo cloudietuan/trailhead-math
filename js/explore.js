@@ -12,12 +12,12 @@ const RELICS = [
   { id: 'cell', name: 'Infinity Cell', text: 'Double energy from correct answers', energy: 2, color: '#FF4FD8', glyph: '∞' },
 ];
 const ZONES = [
-  { name: 'Neon Harbor', color: '#3DD6FF', world: 'math', blurb: 'Glowing docks where the first wild characters hang out.', topic: 'Math Arena, levels 1 to 5', gen: () => pick(MATH.slice(0, 5)).gen() },
+  { name: 'Neon Harbor', color: '#3DD6FF', world: 'math', blurb: 'Glowing docks where the first wild characters hang out.', topic: 'Math Arena, levels 1 to 5', gen: () => mix(MATH.slice(0, 5)) },
   { name: 'Circuit Canyon', color: '#5BE36B', world: 'code', blurb: 'Canyons carved by running code.', topic: 'Reading Lua code', gen: () => luaQuestion(['basics', 'ifs', 'loops']) },
-  { name: 'Prism Peaks', color: '#FF8A3D', world: 'math', blurb: 'Crystal mountains that split light into numbers.', topic: 'Math Arena, levels 6 to 10', gen: () => pick(MATH.slice(5)).gen() },
-  { name: 'Neural Nebula', color: '#B26BFF', world: 'ai', blurb: 'A thinking cloud of a billion sparks.', topic: 'AI Academy', gen: () => pick(AI).gen() },
-  { name: 'Algebra Abyss', color: '#FF4FD8', world: 'math2', blurb: 'Deep, dark and full of x.', topic: 'Algebra Peaks', gen: () => pick(MATH2).gen() },
-  { name: 'Titan Core', color: '#FFE14D', world: 'math2', blurb: 'The center of the Grid. Everything you know, all at once.', topic: 'Everything', gen: () => (R(0, 4) === 0 ? luaQuestion(['basics', 'ifs', 'loops', 'funcs', 'tables']) : pick([...MATH, ...MATH2, ...AI]).gen()) },
+  { name: 'Prism Peaks', color: '#FF8A3D', world: 'math', blurb: 'Crystal mountains that split light into numbers.', topic: 'Math Arena, levels 6 to 10', gen: () => mix(MATH.slice(5)) },
+  { name: 'Neural Nebula', color: '#B26BFF', world: 'ai', blurb: 'A thinking cloud of a billion sparks.', topic: 'AI Academy', gen: () => mix(AI) },
+  { name: 'Algebra Abyss', color: '#FF4FD8', world: 'math2', blurb: 'Deep, dark and full of x.', topic: 'Algebra Peaks', gen: () => mix(MATH2) },
+  { name: 'Titan Core', color: '#FFE14D', world: 'math2', blurb: 'The center of the Grid. Everything you know, all at once.', topic: 'Everything', gen: () => (R(0, 4) === 0 ? luaQuestion(['basics', 'ifs', 'loops', 'funcs', 'tables']) : mix([...MATH, ...MATH2, ...AI])) },
 ];
 const GW = 7, GH = 6, START = '0,5', GUARD = '6,0';
 const WILD_HP = { common: 60, rare: 90, epic: 120, legendary: 180, mythic: 240 };
@@ -29,10 +29,12 @@ const zoneOpen = zi => zi === 0 || S.unlockAll || zState(zi - 1).guard;
 const ownsHero = id => S.owned.includes(id);
 function gainEnergy(n) { const m = (S.relics || []).includes('cell') ? 2 : 1; S.energy = (S.energy || 0) + n * m; }
 function perk() {
-  const r = RARITY[hero(S.hero).rar] || RARITY.common, p = { coin: r.coin, crit: r.crit, heart: r.heart, xp: 0, hint: false };
+  const r = RARITY[hero(S.hero).rar] || RARITY.common, p = { coin: r.coin + 0.05 * (heroLv(S.hero) - 1), crit: r.crit, heart: r.heart, xp: 0, hint: false };
   (S.relics || []).forEach(id => { const x = RELICS.find(q => q.id === id); if (!x) return; p.coin += x.coin || 0; p.crit += x.crit || 0; p.heart += x.heart || 0; p.xp += x.xp || 0; if (x.hint) p.hint = true; });
   return p;
 }
+const heroLv = id => (S.hlv || {})[id] || 1;
+const lvStars = id => (heroLv(id) > 1 ? ` <span class="hlv">${'★'.repeat(heroLv(id))}</span>` : '');
 const boostC = c => Math.round(c * (1 + perk().coin));
 const boostX = x => Math.round(x * (1 + perk().xp));
 
@@ -75,14 +77,15 @@ function closeModal() { const m = $('#modal'); if (m) m.remove(); }
 // ─── Characters: add one to the team ───
 function grantHero(id, source) {
   const h = hero(id), dupe = ownsHero(id);
-  if (dupe) { S.coins += RARITY[h.rar].dupe; } else { S.owned.push(id); exState().caught = (exState().caught || 0) + 1; }
+  let up = false;
+  if (dupe && heroLv(id) < 5) { S.hlv ||= {}; S.hlv[id] = heroLv(id) + 1; up = true; } else if (dupe) { S.coins += RARITY[h.rar].dupe; } else { S.owned.push(id); exState().caught = (exState().caught || 0) + 1; }
   persist(); renderHUD();
-  return { h, dupe, coins: dupe ? RARITY[h.rar].dupe : 0, source };
+  return { h, dupe, up, coins: dupe && !up ? RARITY[h.rar].dupe : 0, source };
 }
 function revealHero(res, after) {
-  const { h, dupe, coins } = res;
-  const m = modal(`<div class="reveal" style="--rc:${RARITY[h.rar].color}"><div class="rays"></div><p class="eyebrow">${dupe ? 'Duplicate' : 'New character!'}</p><div class="revart">${creature(h.look, 'big')}</div><h2 class="stroke">${h.name}</h2><p>${rarTag(h)} <span class="note">${h.role}</span></p>
-    <p class="perk">${dupe ? `You already have ${h.name}, so it turned into ${ICON.coin} <b>${coins}</b> coins.` : `Power: <b>${perkText(h)}</b>`}</p>
+  const { h, dupe, coins, up } = res;
+  const m = modal(`<div class="reveal" style="--rc:${RARITY[h.rar].color}"><div class="rays"></div><p class="eyebrow">${up ? 'Power up!' : dupe ? 'Duplicate' : 'New character!'}</p><div class="revart">${creature(h.look, 'big')}</div><h2 class="stroke">${h.name}</h2><p>${rarTag(h)} <span class="note">${h.role}</span></p>
+    <p class="perk">${up ? `Duplicate! ${h.name} powered up to <b>${'★'.repeat(heroLv(h.id))}</b>. Each star adds <b>+5% coins</b> when equipped.` : dupe ? `${h.name} is already maxed out, so it turned into ${ICON.coin} <b>${coins}</b> coins.` : `Power: <b>${perkText(h)}</b>`}</p>
     <div class="row center">${dupe ? '' : '<button class="btn green" id="rvEq">Equip</button>'}<button class="btn ${dupe ? '' : 'ghost'}" id="rvOk">${dupe ? 'Nice' : 'Later'}</button></div></div>`, 'revealm');
   Sfx.win(); Confetti.burst(h.rar === 'common' ? 60 : h.rar === 'rare' ? 110 : 220);
   const fin = () => { closeModal(); if (after) after(); };
@@ -92,7 +95,7 @@ function revealHero(res, after) {
 
 // ─── Capsules ───
 function capsulePool() {
-  return HEROES.filter(h => (h.cap || (h.wild && !h.guard && zoneOpen(h.zone)) || (!h.wild && h.cost > 0)));
+  return HEROES.filter(h => (h.cap || (h.wild && !h.guard && h.zone != null && zoneOpen(h.zone)) || (!h.wild && h.cost > 0)));
 }
 function openCapsule(after) {
   if (!(S.caps > 0)) { toast('No capsules yet. Find them on the map, beat Elite bosses, or earn badges.'); Sfx.bad(); return; }
@@ -201,7 +204,7 @@ function tapTile(zi, k, btn) {
 function wildBattle(zi, k) {
   const z = ZONES[zi], t = zoneLayout(zi)[k], h = hero(t.h), guard = t.t === 'guard', zs = zState(zi);
   const m = modal(`<div class="reveal" style="--rc:${RARITY[h.rar].color}"><p class="eyebrow">${guard ? 'Zone guardian' : 'Wild character'}</p><div class="revart">${creature(h.look, 'big')}</div><h2 class="stroke">${ownsHero(h.id) || guard ? h.name : '???'}</h2><p>${rarTag(h)} <span class="note">${h.role}</span></p>
-    <p class="perk">${guard ? `Beat it to open <b>${ZONES[zi + 1] ? ZONES[zi + 1].name : 'the final reward'}</b> and add it to your team.` : ownsHero(h.id) ? `You already have this one. Win for ${ICON.coin} <b>${RARITY[h.rar].dupe}</b> coins.` : `Win the battle and it joins your team. Power: <b>${perkText(h)}</b>`}</p>
+    <p class="perk">${guard ? `Beat it to open <b>${ZONES[zi + 1] ? ZONES[zi + 1].name : 'the final reward'}</b> and add it to your team.` : ownsHero(h.id) ? (heroLv(h.id) < 5 ? `You already have this one. Win to <b>power it up</b> a star.` : `Already maxed. Win for ${ICON.coin} <b>${RARITY[h.rar].dupe}</b> coins.`) : `Win the battle and it joins your team. Power: <b>${perkText(h)}</b>`}</p>
     <p class="note">Questions: ${z.topic}. Tougher characters have more HP.</p><div class="row center"><button class="btn" id="wbGo">${ICON.sword} Battle</button><button class="btn ghost" id="wbNo">Not yet</button></div></div>`, 'revealm');
   m.querySelector('#wbNo').onclick = closeModal;
   m.querySelector('#wbGo').onclick = () => {
@@ -211,7 +214,7 @@ function wildBattle(zi, k) {
         const xp = p.xp + (win ? (guard ? 150 : 40) : 10), coins = p.coins + (win ? (guard ? 100 : 15) : 0);
         reward(xp, coins);
         if (!win) { Sfx.lose(); return resultScreen({ world: z.world, face: creature(h.look, 'boss'), title: 'IT GOT AWAY', sub: `${h.name} won this round, but it's still on the map. Train up and try again.`, xp, coins, lose: true, buttons: [['Try again', () => wildBattle(zi, k), ''], ['Back to the map', () => openZone(zi), 'ghost']] }); }
-        if (guard) { zs.guard = true; S.caps = (S.caps || 0) + 2; } else zs.done[k] = 1;
+        if (guard) { zs.guard = true; S.caps = (S.caps || 0) + 2; logEvent('guard', z.name); } else zs.done[k] = 1;
         S.stats.boss++; persist(); questEvent('boss'); checkBadges();
         const res = grantHero(h.id, 'wild');
         openZone(zi);
@@ -223,8 +226,8 @@ function wildBattle(zi, k) {
 // ─── Codex: everything you can collect ───
 function openCodex(tab = 'chars') {
   show('sCodex');
-  const groups = [['Starters and shop', HEROES.filter(h => !h.wild)], ...ZONES.map((z, i) => [z.name, WILD.filter(h => h.zone === i)]), ['Capsule only', WILD.filter(h => h.cap)]];
-  const card = h => { const own = ownsHero(h.id), eq = S.hero === h.id; return `<button class="cx ${own ? 'own' : 'unk'} ${eq ? 'eq' : ''}" data-h="${h.id}" style="--rc:${RARITY[h.rar].color}"><span class="cxart">${creature(h.look)}</span><b>${own ? h.name : '???'}</b>${rarTag(h)}<small>${own ? perkText(h) : h.wild ? (h.cap ? 'Found in capsules' : h.guard ? 'Zone guardian' : 'Roams the map') : h.road ? `Star Road: ${h.road} stars` : 'In the shop'}</small>${eq ? '<em>EQUIPPED</em>' : ''}</button>`; };
+  const groups = [['Starters and shop', HEROES.filter(h => !h.wild)], ...ZONES.map((z, i) => [z.name, WILD.filter(h => h.zone === i)]), ['Capsule only', WILD.filter(h => h.cap)], ['Weekly raid rewards', HEROES.filter(h => h.raid)]];
+  const card = h => { const own = ownsHero(h.id), eq = S.hero === h.id; return `<button class="cx ${own ? 'own' : 'unk'} ${eq ? 'eq' : ''}" data-h="${h.id}" style="--rc:${RARITY[h.rar].color}"><span class="cxart">${creature(h.look)}</span><b>${own ? h.name + lvStars(h.id) : '???'}</b>${rarTag(h)}<small>${own ? perkText(h) + (heroLv(h.id) > 1 ? ` · +${(heroLv(h.id) - 1) * 5}% coins` : '') : h.raid ? 'Weekly raid reward' : h.wild ? (h.cap ? 'Found in capsules' : h.guard ? 'Zone guardian' : 'Roams the map') : h.road ? `Star Road: ${h.road} stars` : 'In the shop'}</small>${eq ? '<em>EQUIPPED</em>' : ''}</button>`; };
   const pk = perk();
   $('#sCodex').innerHTML = `<div class="card shophead"><button class="btn ghost small" id="cBack">← Back</button><h1 class="stroke">Codex</h1><span class="pill big">${S.owned.length} / ${HEROES.length}</span></div>
     <div class="tabs">${[['chars', 'Characters'], ['relics', 'Relics'], ['badges', 'Badges']].map(([k, n]) => `<button class="tab ${k === tab ? 'on' : ''}" data-t="${k}">${n}</button>`).join('')}</div>
@@ -234,5 +237,5 @@ function openCodex(tab = 'chars') {
     : `<div class="cxgrid wide">${BADGES.map(b => { const own = (S.badges || []).includes(b.id); return `<div class="cx badge ${own ? 'own' : 'unk'}"><span class="bmedal">${own ? '🏅' : '🔒'}</span><b>${b.name}</b><small>${b.text}</small></div>`; }).join('')}</div><p class="note center">Every badge gives you a free capsule.</p>`}`;
   $('#cBack').onclick = goLobby;
   $$('#sCodex .tab').forEach(b => b.onclick = () => { Sfx.tap(); openCodex(b.dataset.t); });
-  $$('#sCodex .cx[data-h]').forEach(b => b.onclick = () => { const id = b.dataset.h; if (!ownsHero(id)) { Sfx.bad(); const h = hero(id); toast(h.wild ? (h.cap ? 'This one only comes from capsules.' : `Find it in <b>${ZONES[h.zone].name}</b>.`) : 'Get this one in the shop or on the Star Road.'); return; } S.hero = id; persist(); Sfx.tap(); toast(`<b>${hero(id).name}</b> equipped. ${perkText(hero(id))}`); openCodex('chars'); });
+  $$('#sCodex .cx[data-h]').forEach(b => b.onclick = () => { const id = b.dataset.h; if (!ownsHero(id)) { Sfx.bad(); const h = hero(id); toast(h.raid ? 'Win this one from a weekly raid boss.' : h.wild ? (h.cap ? 'This one only comes from capsules.' : `Find it in <b>${ZONES[h.zone].name}</b>.`) : 'Get this one in the shop or on the Star Road.'); return; } S.hero = id; persist(); Sfx.tap(); toast(`<b>${hero(id).name}</b> equipped. ${perkText(hero(id))}`); openCodex('chars'); });
 }

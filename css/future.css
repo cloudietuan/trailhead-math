@@ -196,3 +196,29 @@ sup { font-size: .62em; }
 /* Keep the whole zone on screen, and keep undiscovered characters as silhouettes even if they glow */
 .grid7 { width: 100%; max-width: max(320px, calc((100vh - 250px) * 7 / 6)); margin: 0 auto; }
 .rost.unk .creature, .cx.unk .creature { filter: brightness(0) drop-shadow(0 0 3px rgba(127, 248, 255, .7)) !important; }
+
+/* ─── Extras: step-by-step solving, raid, obby, drill, report ─── */
+.holostage.htmlstage { background: #060926; } .holohtml { padding: 14px 18px; max-height: 52vh; overflow: auto; font-size: 18px; }
+.solveq { background: rgba(127, 248, 255, .08); border: 2px solid rgba(127, 248, 255, .25); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; } .solveq .expr { font-size: 30px; margin: 6px 0 2px; } .solveq .vis { max-width: 240px; margin: 4px auto; }
+.solvesteps { margin: 0; padding-left: 26px; } .solvesteps li { margin-bottom: 6px; line-height: 1.45; color: var(--muted); } .solvesteps li.new { color: #fff; font-size: 20px; animation: afade .5s both; } .solvesteps li.new::marker { color: var(--yellow); }
+.solveans { margin-top: 10px; font-family: var(--disp); font-weight: 700; font-size: 26px; text-align: center; color: var(--ink); background: var(--yellow); border-radius: 12px; padding: 6px; box-shadow: 0 0 22px var(--yellow); }
+.hlv { color: var(--yellow); letter-spacing: 1px; text-shadow: 0 0 8px var(--yellow); font-size: .8em; }
+.xcard { display: flex; gap: 12px; align-items: center; color: #fff; font: inherit; text-align: left; cursor: pointer; width: 100%; padding: 12px 14px; transition: transform .12s; } .xcard:hover { transform: translateY(-2px); }
+.xcard b { display: block; font-family: var(--disp); font-size: 19px; } .xcard small { font-size: 13px; color: #E0E5FF; } .xcard u { color: var(--yellow); text-decoration: none; font-weight: 900; }
+.xart { width: 54px; flex: none; display: grid; place-items: center; } .xart .creature { width: 54px; height: 61px; } .xemoji { font-size: 36px; filter: drop-shadow(0 3px 0 var(--ink)); }
+.raidcard { background: linear-gradient(110deg, rgba(255, 79, 123, .55), rgba(90, 16, 64, .9)); border-color: var(--pink); box-shadow: var(--sh), 0 0 22px rgba(255, 79, 123, .4); }
+.obbycard { background: linear-gradient(110deg, rgba(91, 227, 107, .4), rgba(13, 31, 74, .9)); border-color: var(--green); }
+.drillcard { background: linear-gradient(110deg, rgba(255, 201, 60, .35), rgba(15, 20, 72, .9)); border-color: var(--yellow); } .xcard.dimmed { opacity: .6; }
+.repgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 12px; } .repgrid div { background: rgba(0, 0, 0, .3); border-radius: 12px; padding: 8px; text-align: center; } .repgrid b { display: block; font-family: var(--disp); font-size: 26px; color: var(--neon); } .repgrid small { color: var(--muted); font-size: 12px; }
+.repbars { display: flex; gap: 8px; align-items: flex-end; height: 110px; } .repbars div { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; } .repbars i { display: flex; align-items: flex-end; width: 100%; min-height: 3px; background: rgba(255, 79, 123, .6); border-radius: 6px 6px 0 0; overflow: hidden; } .repbars em { display: block; width: 100%; background: var(--green); } .repbars small { color: var(--muted); font-size: 12px; }
+.reptwo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .reptwo h4, .parents h4 { font-family: var(--disp); margin: 10px 0 4px; color: var(--neon); } .reptwo p { margin: 0 0 3px; } .reptwo b { color: var(--yellow); }
+#tcBox { margin-top: 10px; } #tcIn, #modal textarea { width: 100%; background: #070A2C; color: #fff; border: 2px solid var(--neon); border-radius: 10px; padding: 8px; font-family: var(--mono); font-size: 12px; }
+.obbystage { padding: 14px; margin: 12px 0; overflow-x: auto; background: linear-gradient(180deg, #16286E, #070A2C); }
+.obby { --cell: clamp(34px, calc((100vw - 110px) / var(--n)), 62px); position: relative; display: grid; grid-template-columns: repeat(var(--n), var(--cell)); height: calc(var(--cell) * 2.6); align-items: end; width: max-content; margin: 0 auto; }
+.ocell { position: relative; height: calc(var(--cell) * .9); } .ocell.ground { background: linear-gradient(180deg, #5BE36B 0 22%, #1F7A4A 22%); border: 2px solid var(--ink); border-radius: 6px 6px 0 0; }
+.ocell.lava { height: calc(var(--cell) * .45); background: linear-gradient(180deg, #FFC93C, #FF4F1F); border-radius: 0; animation: lava 1s ease-in-out infinite alternate; box-shadow: 0 0 18px #FF5A1F; } @keyframes lava { to { filter: brightness(1.35); } }
+.ocoin, .oflag { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); width: 60%; } .ocoin { margin-bottom: 10%; animation: bob 1.4s ease-in-out infinite; } .ocoin .ic { width: 100%; height: auto; } .oflag { width: 80%; } .oflag svg { width: 100%; display: block; }
+.orun { position: absolute; left: calc(var(--x) * var(--cell)); bottom: calc(var(--cell) * .86); width: var(--cell); transition: left .18s linear; z-index: 2; } .orun .creature { width: 100%; height: auto; }
+.orun.jumping { transition: left .3s linear; animation: ojump .3s ease-out; } @keyframes ojump { 50% { transform: translateY(calc(var(--cell) * -.9)); } }
+.orun.fell { animation: ofall .7s ease-in forwards; } @keyframes ofall { to { transform: translateY(calc(var(--cell) * 1.2)) rotate(40deg); opacity: 0; } }
+@media (max-width: 760px) { .repgrid { grid-template-columns: repeat(2, 1fr); } .reptwo { grid-template-columns: 1fr; } }

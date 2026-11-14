@@ -43,6 +43,12 @@ const balance = (a, b, x) => { const c = a * x + b; return [
   { say: `${a} boxes weigh ${c - b}, so split it ${a} ways. One box is <b>x = ${x}</b>. Undo the adding first, then the multiplying.`, svg: hScale(a, b, x, x, 2) + tx(110, 30, 'x', 0.3, 'big') + tx(290, 30, `${c - b} ÷ ${a}`, 0.3, 'big') },
 ]; };
 
+// Drawings built from the numbers in one specific question (used by "Echo, show me how")
+const vizBalance = (a, b, x) => ({ say: `Here's <b>your</b> equation as a balanced scale: ${a} boxes of x plus ${b} on the left, ${a * x + b} on the right.`, svg: hScale(a, b, a * x + b, x, 0) + tx(110, 30, `${a}x + ${b}`, 0.2, 'big') + tx(290, 30, a * x + b, 0.2, 'big') });
+const vizPyth = (a, b, c, hide) => ({ say: `Here's your triangle. The side marked <b>?</b> is the one we need.`, svg: `<polygon points="90,180 250,180 90,60" fill="#FF8A3D" stroke="#fff" stroke-width="4" ${an('pop')}/><rect x="90" y="166" width="14" height="14" fill="none" class="sty"/>` + tx(72, 126, hide === 'a' ? '?' : a, 0.5, hide === 'a' ? 'big hl' : 'big') + tx(170, 208, hide === 'b' ? '?' : b, 0.6, hide === 'b' ? 'big hl' : 'big') + tx(190, 112, hide === 'c' ? '?' : c, 0.7, hide === 'c' ? 'big hl' : 'big') + tx(320, 90, 'a² + b² = c²', 1.1, 'hl') + tx(320, 124, hide === 'c' ? `${a}² + ${b}² = ?²` : `?² + ${hide === 'a' ? b : a}² = ${c}²`, 1.6) });
+const vizSlope = (x1, y1, x2, y2) => { const up = y2 >= y1, ay = up ? 170 : 60, by = up ? 60 : 170; return { say: 'Here are your two points. The <b>run</b> is how far across, and the <b>rise</b> is how far up or down.', svg: `<line x1="60" y1="${ay + (up ? 22 : -22)}" x2="300" y2="${by + (up ? -22 : 22)}" class="a-draw stp" pathLength="1"/><line x1="90" y1="${ay}" x2="270" y2="${ay}" class="a-draw stc" pathLength="1" style="--d:.8s"/><line x1="270" y1="${ay}" x2="270" y2="${by}" class="a-draw sty" pathLength="1" style="--d:1.4s"/><circle cx="90" cy="${ay}" r="8" fill="#7FF8FF" stroke="${INK}" stroke-width="3" ${an('pop', 0.3)}/><circle cx="270" cy="${by}" r="8" fill="#7FF8FF" stroke="${INK}" stroke-width="3" ${an('pop', 0.5)}/>` + tx(70, ay + (up ? 30 : -18), `(${n2(x1)}, ${n2(y1)})`, 0.4, 'sm') + tx(300, by + (up ? -16 : 30), `(${n2(x2)}, ${n2(y2)})`, 0.6, 'sm') + tx(180, ay + (up ? 24 : -12), `run = ${n2(x2 - x1)}`, 1.1, 'cy') + tx(326, 120, `rise = ${n2(y2 - y1)}`, 1.7, 'hl') }; };
+const vizBag = (groups, want) => { const all = groups.flatMap(([n, col, name]) => Array.from({ length: n }, () => [col, name])), per = Math.min(9, Math.ceil(Math.sqrt(all.length * 2))); return { say: `Here's your bag: ${all.length} marbles in all. The ${want} ones are glowing.`, svg: all.map(([col, name], i) => `<circle cx="${200 - (per - 1) * 19 + (i % per) * 38}" cy="${50 + Math.floor(i / per) * 40}" r="15" fill="${col}" stroke="${INK}" stroke-width="3" ${name === want ? 'class="a-pulse"' : `${an('pop', i * 0.04)} opacity=".55"`}/>`).join('') + tx(200, 204, `${all.filter(x => x[1] === want).length} ${want} out of ${all.length}`, 0.8, 'big hl') }; };
+
 // Each explainer: a title and a few scenes. A scene has what Echo says and an animated drawing.
 const EXPLAIN = {
   neg: { title: 'Negative numbers', scenes: [
@@ -171,12 +177,15 @@ const TIPS = [
   'Rarer characters give bigger bonuses. Check the <b>Codex</b> to see yours.',
   'Stuck in a lesson? Tap me and pick <b>Explain it</b>. I\'ll draw it out.',
   'Beat a boss, then try the <b>Elite rematch</b> for a free capsule.',
+  'Got one wrong? Tap <b>Echo, show me how</b> and I\'ll solve that exact question with you.',
+  'The game remembers what you miss and asks it more often. The <b>Weak Spot Drill</b> fixes it fast.',
+  'A duplicate character isn\'t wasted. It <b>powers up</b> the one you have.',
   'Relics are hidden in every zone of the Grid. They work forever once you find them.',
   'Three right in a row starts a <b>combo</b>, and combos pay bonus coins.',
   'When an AI sounds confident, that doesn\'t mean it\'s right. Check it!',
 ];
 const TOURS = {
-  sLobby: [['#playBtn', 'This is home base. Hit <b>PLAY</b> to jump straight into your next level.'], ['.worlds', 'Four worlds to beat: Math Arena, <b>Algebra Peaks</b> (the hard stuff), Code Lab and AI Academy.'], ['#toMap', '<b>The Grid</b> is the map. Spend energy to explore it and catch wild characters.'], ['#toCodex', 'The <b>Codex</b> shows every character, relic and badge you can collect.'], ['.quests', 'Daily quests reset every day. Finish them for coins and keep your streak alive.'], ['#echo', 'And I\'m always right here. Tap me any time you want a tip or an explanation.']],
+  sLobby: [['#playBtn', 'This is home base. Hit <b>PLAY</b> to jump straight into your next level.'], ['.worlds', 'Four worlds to beat: Math Arena, <b>Algebra Peaks</b> (the hard stuff), Code Lab and AI Academy.'], ['#toMap', '<b>The Grid</b> is the map. Spend energy to explore it and catch wild characters.'], ['#toCodex', 'The <b>Codex</b> shows every character, relic and badge you can collect.'], ['.quests', 'Daily quests reset every day. Finish them for coins and keep your streak alive.'], ['#toRaid', 'A new <b>raid boss</b> shows up every week, with a character you can only win that week.'], ['#toObby', '<b>Obby Builder</b>: write real Lua to run a character through a lava course.'], ['#echo', 'And I\'m always right here. Tap me any time you want a tip or an explanation.']],
   sWorld: [['.node.cur', 'This is your next level. Beat its boss or earn 2 stars to unlock the one after it.'], ['.node.nboss', 'At the end of the path waits the <b>Titan</b>. It uses questions from every level in this world.']],
   sLevel: [['[data-act="learn"]', 'Start with <b>Learn</b>. Short lesson, things to play with, quick checks.'], ['[data-act="practice"]', 'Then <b>practice</b> to earn up to 3 stars.'], ['[data-act="boss"]', 'Then fight the <b>boss</b>. Three hearts. Answer fast for critical hits.'], ['#lvEcho', 'Want it drawn out first? This button plays my animated explanation.']],
   sMap: [['.znode', 'Each circle is a <b>zone</b>. The number shows how much of it you\'ve explored.'], ['.pill.big', 'This is your <b>energy</b>. You earn it from correct answers anywhere in the game.'], ['#mCaps', '<b>Capsules</b> hold a random character. Common, rare, epic, legendary... or mythic.']],
@@ -236,26 +245,40 @@ const Guide = (() => {
   function endTour() { tour = null; document.body.classList.remove('touring'); const s = $('#spot'), p = $('#ptr'); if (s) s.hidden = true; if (p) p.hidden = true; hide(); }
   // ─── Holo-board explainers ───
   const has = id => !!(id && EXPLAIN[EXPLAIN_FOR[id]]);
-  function explain(id) {
-    const ex = EXPLAIN[EXPLAIN_FOR[id]]; if (!ex) return;
-    endTour(); let i = 0;
+  function explain(id) { const ex = EXPLAIN[EXPLAIN_FOR[id]]; if (ex) board(ex); }
+  function board(ex) {
+    endTour(); const old = $('#holo'); if (old) old.remove(); let i = 0;
     const h = document.createElement('div'); h.id = 'holo'; document.body.appendChild(h);
     const draw = () => {
       const sc = ex.scenes[i], last = i === ex.scenes.length - 1;
       h.innerHTML = `<div class="holocard"><div class="holotop"><span class="eyebrow">Echo explains · ${ex.title}</span><button class="btn ghost small" data-a="x">✕</button></div>
-        <div class="holostage"><div class="scanl"></div><svg viewBox="0 0 400 220" class="holosvg">${sc.svg}</svg></div>
+        <div class="holostage ${sc.html ? 'htmlstage' : ''}"><div class="scanl"></div>${sc.html ? `<div class="holohtml">${sc.html}</div>` : `<svg viewBox="0 0 400 220" class="holosvg">${sc.svg}</svg>`}</div>
         <div class="holosay"><div class="holoecho">${echoSVG('talk')}</div><p>${sc.say}</p></div>
-        <div class="holonav"><div class="pips">${ex.scenes.map((_, k) => `<i class="${k < i ? 'done' : k === i ? 'on' : ''}"></i>`).join('')}</div><button class="btn ghost small" data-a="re">↻ Replay</button><button class="btn ghost small" data-a="back" ${i ? '' : 'disabled'}>Back</button><button class="btn small ${last ? 'green' : ''}" data-a="next">${last ? 'Got it!' : 'Next ➜'}</button></div></div>`;
+        <div class="holonav"><div class="pips">${ex.scenes.map((_, k) => `<i class="${k < i ? 'done' : k === i ? 'on' : ''}"></i>`).join('')}</div><button class="btn ghost small" data-a="re">↻ Replay</button><button class="btn ghost small" data-a="back" ${i ? '' : 'disabled'}>Back</button>${last && ex.idea ? '<button class="btn small cyan" data-a="idea">See the big idea</button>' : ''}<button class="btn small ${last ? 'green' : ''}" data-a="next">${last ? 'Got it!' : 'Next ➜'}</button></div></div>`;
       speak(sc.say);
     };
     const close = () => { hush(); h.remove(); document.removeEventListener('keydown', key); };
     const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight' && i < ex.scenes.length - 1) { i++; draw(); } if (e.key === 'ArrowLeft' && i) { i--; draw(); } };
     h.onclick = e => { const a = e.target.dataset && e.target.dataset.a; if (e.target === h || a === 'x') return close(); if (!a) return; Sfx.tap();
+      if (a === 'idea') { close(); return explain(ex.idea); }
       if (a === 're') draw(); if (a === 'back' && i) { i--; draw(); } if (a === 'next') { if (i < ex.scenes.length - 1) { i++; draw(); } else { close(); S.stats.holo = (S.stats.holo || 0) + 1; persist(); } } };
     document.addEventListener('keydown', key);
     draw();
   }
+  // Walk through ONE specific question, step by step, with its own numbers
+  function solve(q, lid) {
+    const steps = String(q.why || '').split(/(?<=[.!?✔])\s+(?=[A-Z0-9(−√<])/).filter(x => x.trim()), ans = q.kind === 'choice' ? q.choices[q.correct] : q.show;
+    const page = n => `<div class="solveq">${q.q}</div><ol class="solvesteps">${steps.slice(0, n).map((st, k) => `<li class="${k === n - 1 ? 'new' : ''}">${st}</li>`).join('')}</ol>`;
+    const scenes = [];
+    if (q.viz) scenes.push(q.viz);
+    scenes.push({ say: q.hint ? `Let's work this exact one out together. First, the key idea: ${q.hint}` : 'Let\'s work this exact one out together.', html: page(0) });
+    steps.forEach((st, k) => scenes.push({ say: st, html: page(k + 1) }));
+    scenes.push({ say: `So the answer is <b>${ans}</b>. Try the next one with the same steps.`, html: page(steps.length) + `<div class="solveans a-pop">Answer: <b>${ans}</b></div>` });
+    board({ title: 'This question, step by step', scenes, idea: has(lid) ? lid : null });
+  }
+  const solveBtn = () => `<button type="button" class="btn small cyan echobtn" data-solve="1">${echoSVG('happy', 'mini')} Echo, show me how</button>`;
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-solve]'); if (b && typeof P !== 'undefined' && P && P.q) { Sfx.tap(); solve(P.q, P.q.lid || (P.l && P.l.id)); } });
   const btn = (id, label = 'Watch Echo explain it') => (has(id) ? `<button type="button" class="btn small cyan echobtn" data-echo="${id}">${echoSVG('happy', 'mini')} ${label}</button>` : '');
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-echo]'); if (b) { Sfx.tap(); explain(b.dataset.echo); } });
-  return { mount, say, menu, hide, explain, has, btn, startTour, endTour, setCtx: id => { ctx = id; }, onScreen(id) { const b = $('#echo'); if (b) b.hidden = id === 'sStart'; if (tour) endTour(); else hide(); } };
+  return { mount, say, menu, hide, explain, has, btn, solve, solveBtn, startTour, endTour, setCtx: id => { ctx = id; }, onScreen(id) { const b = $('#echo'); if (b) b.hidden = id === 'sStart'; if (tour) endTour(); else hide(); } };
 })();
