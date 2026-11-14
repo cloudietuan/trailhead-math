@@ -2,7 +2,7 @@
 
 **Math. Code. AI. Beat the bosses.**
 
-A learning game for a kid who's past 5th grade math and wants to code. Three worlds, 24 levels, a boss at the end of every level, and a Titan at the end of every world.
+A learning game for a kid who's past 5th grade math and wants to code. Four worlds, 39 levels, a boss at the end of every level, a Titan at the end of every world, and a map full of characters to collect.
 
 **Play it:** https://cloudietuan.github.io/trailhead-math/
 
@@ -51,6 +51,16 @@ Levels 4–8 use **real Lua**, the language Roblox games are built on (Roblox us
 | 5 | Fact Checker | Catch an AI's wrong answers in math, code and facts |
 | 6 | Safe & Smart | Privacy, deepfakes, bias, honesty |
 
+## What's new in Brain Brawl 2
+
+- **Algebra Peaks**: 9 harder math levels (grades 7 and 8). Proportions and percent change, multi-step equations, circles, volume, probability, exponent laws and scientific notation, the Pythagorean theorem, slope, and systems of equations.
+- **AI Academy, levels 7 to 12**: tokens and context windows, a build-a-neuron lab, how training works, advanced prompting, using AI as a tutor instead of a shortcut, and picking the right tool.
+- **Echo**: a guide character in the corner. Echo flies a pointer around the screen to give tours, and plays animated "holo-board" explanations of how the math and the AI work. Voice uses the browser's built-in text-to-speech and can be turned off from Echo's menu.
+- **The Grid**: six zones of fog-of-war tiles. Correct answers anywhere earn energy. Energy scans tiles. Tiles hide coins, capsules, relics, wild characters to battle, and a guardian that opens the next zone.
+- **Collecting**: 44 characters in five rarities (rarer ones give coin, crit-time and heart bonuses), 6 permanent relics, 18 badges, and capsules. Everything is earned by playing. Nothing is for sale.
+- **Elite rematches**: beat a boss, then fight a tougher version for a capsule and an extra star.
+- A neon restyle.
+
 ## How a level works
 
 1. **Learn**: a short lesson with sliders, live code, or diagrams, plus quick checks.
@@ -72,12 +82,17 @@ Also: coins, XP levels, 11 unlockable heroes, a Star Road with rewards, daily qu
 
 ```
 index.html          page shell
-css/style.css       all styles
+css/style.css       base styles
+css/future.css      neon theme and styles for everything new
 js/core.js          helpers, answer checking, saving, sound, daily quests
 js/art.js           the characters (drawn in code) and icons
 js/math.js          Math Arena lessons, question generators, bosses
+js/math2.js         Algebra Peaks (grades 7 and 8)
 js/code.js          Lua runner, code editor, robot puzzle engine, Code Lab levels
 js/ai.js            AI Academy lessons, labs, question banks
+js/ai2.js           AI Academy levels 7 to 12
+js/explore.js       the Grid map, wild characters, relics, capsules, badges, Codex
+js/guide.js         Echo: pointer tours and animated explainers
 js/app.js           screens: lobby, maps, levels, battles, shop, Star Road
 vendor/fengari-web.js   Lua 5.3 in the browser (MIT license)
 ```

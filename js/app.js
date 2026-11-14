@@ -1,14 +1,17 @@
 // Brain Brawl app: screens and game flow.
-const WORLD_LEVELS = { math: MATH, code: CODE, ai: AI };
+const WORLD_LEVELS = { math: MATH, math2: MATH2, code: CODE, ai: AI };
+const WORLD_ORDER = ['math', 'math2', 'code', 'ai'];
 const WORLD_BOSS = {
   math: { id: 'mathboss', world: 'math', name: 'Math Titan', title: 'World Boss', hp: 160, gen: () => pick(MATH).gen(),
     boss: { name: 'The Calculatron', look: { color: '#FF8A3D', eyes: 'robot', mouth: 'teeth', acc: 'crown', spots: true }, taunt: 'I know EVERY math skill you learned. All of them. At once. Bring it.' } },
+  math2: { id: 'math2boss', world: 'math2', name: 'Algebra Titan', title: 'World Boss', hp: 200, gen: () => pick(MATH2).gen(),
+    boss: { name: 'The Algebrax', look: { color: '#FF4FD8', eyes: 'cyber', mouth: 'teeth', acc: 'crown', spots: true, glow: '#FF4FD8' }, taunt: 'Solve for x? I AM x. And y. And every letter you fear.' } },
   code: { id: 'codeboss', world: 'code', name: 'Code Titan', title: 'World Boss', hp: 160, gen: () => luaQuestion(['basics', 'ifs', 'loops', 'funcs', 'tables']),
     boss: { name: 'The Bug King', look: { color: '#5BE36B', eyes: 'three', mouth: 'fangs', acc: 'crown', spots: true }, taunt: 'Every bug in every program bows to ME. Can you read code faster than I can break it?' } },
   ai: { id: 'aiboss', world: 'ai', name: 'AI Titan', title: 'World Boss', hp: 160, gen: () => pick(AI).gen(),
     boss: { name: 'The Deepfake Dragon', look: { color: '#3DD6FF', eyes: 'angry', mouth: 'teeth', acc: 'wings', spots: true }, taunt: 'Is this dragon real? Is anything real? Only a true AI expert can tell!' } },
 };
-const ALL = [...MATH, ...CODE, ...AI];
+const ALL = [...MATH, ...MATH2, ...CODE, ...AI];
 const level = id => ALL.find(l => l.id === id) || Object.values(WORLD_BOSS).find(b => b.id === id);
 const isDone = id => { const v = S.lv[id]; return !!v && (v.boss || v.stars >= 2); };
 const isOpen = l => { if (S.unlockAll) return true; const arr = WORLD_LEVELS[l.world]; const i = arr.indexOf(l); if (i < 0) return arr.every(x => isDone(x.id)); return i === 0 || isDone(arr[i - 1].id); };
@@ -16,13 +19,13 @@ const KIND_LABEL = { quiz: 'Practice', bot: 'Puzzles', lua: 'Challenges', lab: '
 const kindOf = l => l.kind || 'quiz';
 const bossGen = l => (kindOf(l) === 'lua' ? () => luaQuestion(l.pool) : l.gen);
 const isTouch = matchMedia('(pointer: coarse)').matches;
-const ROAD = [{ at: 5, coins: 50 }, { at: 10, coins: 80 }, { at: 15, coins: 100 }, { at: 20, coins: 120 }, { at: 30, coins: 150 }, { at: 40, hero: 'zap' }, { at: 50, coins: 200 }, { at: 60, coins: 250 }, { at: 75, coins: 300 }, { at: 90, coins: 400 }, { at: 100, hero: 'king' }, { at: 115, coins: 500 }, { at: 130, coins: 750 }];
-function totalStars() { let s = 0; ALL.forEach(l => { const v = S.lv[l.id]; if (v) s += (v.stars || 0) + (v.boss ? 2 : 0); }); Object.values(WORLD_BOSS).forEach(b => { if (S.lv[b.id] && S.lv[b.id].boss) s += 5; }); return s; }
+const ROAD = [{ at: 5, coins: 50 }, { at: 10, coins: 80 }, { at: 15, coins: 100 }, { at: 20, coins: 120 }, { at: 30, coins: 150 }, { at: 40, hero: 'zap' }, { at: 50, coins: 200 }, { at: 60, coins: 250 }, { at: 75, coins: 300 }, { at: 90, coins: 400 }, { at: 100, hero: 'king' }, { at: 115, coins: 500 }, { at: 130, coins: 750 }, { at: 25, caps: 1 }, { at: 45, caps: 1 }, { at: 70, caps: 2 }, { at: 150, caps: 3 }, { at: 180, coins: 1000 }, { at: 210, caps: 5 }].sort((a, b) => a.at - b.at);
+function totalStars() { let s = 0; ALL.forEach(l => { const v = S.lv[l.id]; if (v) s += (v.stars || 0) + (v.boss ? 2 : 0) + (v.elite ? 1 : 0); }); Object.values(WORLD_BOSS).forEach(b => { if (S.lv[b.id] && S.lv[b.id].boss) s += 5; if (S.lv[b.id] && S.lv[b.id].elite) s += 1; }); return s; }
 const roadReady = () => ROAD.filter(r => r.at <= totalStars() && !S.road.includes(r.at)).length;
 const starsHTML = n => `<span class="stars">${[0, 1, 2].map(i => (i < n ? ICON.star : ICON.starOff)).join('')}</span>`;
 
 // ═════════════ Screens ═════════════
-const SCREENS = ['sStart', 'sLobby', 'sWorld', 'sLevel', 'sLesson', 'sPlay', 'sBot', 'sLua', 'sLab', 'sResult', 'sShop', 'sRoad', 'sParents'];
+const SCREENS = ['sStart', 'sLobby', 'sWorld', 'sLevel', 'sLesson', 'sPlay', 'sBot', 'sLua', 'sLab', 'sResult', 'sShop', 'sRoad', 'sParents', 'sMap', 'sZone', 'sCodex'];
 let P = null, timers = [];
 const later = (fn, ms) => timers.push(setTimeout(fn, ms));
 function stopTimers() { timers.forEach(clearTimeout); timers = []; if (P && P.iv) { clearInterval(P.iv); P.iv = 0; } }
@@ -32,10 +35,10 @@ function show(id, world) {
   $('#hud').hidden = id === 'sStart';
   document.body.dataset.screen = id;
   document.body.dataset.world = world || '';
-  window.scrollTo(0, 0); renderHUD();
+  window.scrollTo(0, 0); renderHUD(); closeModal(); Guide.onScreen(id);
 }
 function reward(xp, coins) {
-  const before = levelOf(S.xp); S.xp += xp; S.coins += coins; persist(); renderHUD();
+  const before = levelOf(S.xp); S.xp += boostX(xp); S.coins += boostC(coins); persist(); renderHUD();
   if (levelOf(S.xp) > before) setTimeout(() => { const l = levelOf(S.xp); toast(`⬆️ LEVEL UP! Level ${l + 1}: <b>${TITLES[l]}</b>`); Sfx.level(); Confetti.burst(90); }, 900);
 }
 function renderHUD() {
@@ -50,6 +53,7 @@ function renderHUD() {
   $('#hudCoins').textContent = S.coins.toLocaleString();
   $('#hudStars').textContent = totalStars();
   $('#hudStreak').textContent = S.streak.n || 1;
+  $('#hudEnergy').textContent = S.energy || 0;
   $('#navRoad').classList.toggle('ping', roadReady() > 0);
   $('#navSound').classList.toggle('off', !S.sound);
 }
@@ -82,7 +86,7 @@ function renderStart() {
 
 // ─── Lobby ───
 function nextUp() {
-  const order = [S.lastWorld || 'math', 'math', 'code', 'ai'];
+  const order = [S.lastWorld || 'math', ...WORLD_ORDER];
   for (const w of order) { const l = WORLD_LEVELS[w].find(x => !isDone(x.id) && isOpen(x)); if (l) return l; if (!(S.lv[WORLD_BOSS[w].id] || {}).boss && isOpen(WORLD_BOSS[w])) return WORLD_BOSS[w]; }
   return null;
 }
@@ -93,17 +97,18 @@ function questsHTML() {
     return `<div class="quest ${q.claimed ? 'claimed' : q.done ? 'ready' : ''}"><div class="qinfo"><b>${d.text}</b><div class="qbar"><i style="width:${q.n / d.goal * 100}%"></i></div><small>${q.n} / ${d.goal}</small></div>${q.claimed ? `<span class="qok">${ICON.check}</span>` : `<button class="btn small ${q.done ? 'green' : 'ghost'}" data-claim="${i}" ${q.done ? '' : 'disabled'}>${ICON.coin}${d.coins}</button>`}</div>`; }).join('');
 }
 function goLobby() {
-  ensureQuests();
+  ensureQuests(); checkBadges(); Guide.setCtx(null);
   const h = hero(S.hero), nx = nextUp(), ts = totalStars(), nextRoad = ROAD.find(r => r.at > ts), prevAt = [...ROAD].reverse().find(r => r.at <= ts);
   $('#sLobby').innerHTML = `<div class="lobby">
     <section class="stage card">
       <div class="heroWrap">${creature(h.look, 'big')}</div><div class="plat"></div>
-      <h2 class="stroke pname">${esc(S.name)}</h2><p class="sub">${h.name} · ${TITLES[levelOf(S.xp)]}</p>
-      <button class="btn small purple" id="toShop">Change hero</button>
+      <h2 class="stroke pname">${esc(S.name)}</h2><p class="sub">${h.name} · ${TITLES[levelOf(S.xp)]}</p><p class="heroperk">${rarTag(h)} ${perkText(h)}</p>
+      <div class="row center"><button class="btn small purple" id="toShop">Shop</button><button class="btn small cyan" id="toCodex">Codex ${S.owned.length}/${HEROES.length}</button></div>
     </section>
     <section class="mainc">
       <button class="playbtn" id="playBtn"><span class="pb1">PLAY</span><span class="pb2">${nx ? `${WORLDS[nx.world].short}: ${nx.boss && WORLD_BOSS[nx.world] === nx ? nx.boss.name : nx.name}` : 'Everything beaten! Replay any level'}</span></button>
-      <div class="worlds">${['math', 'code', 'ai'].map(w => { const p = worldProgress(w); return `<button class="wcard w-${w}" data-w="${w}">${emblem(w)}<div class="wtxt"><h3>${WORLDS[w].name}</h3><p>${WORLDS[w].blurb}</p><div class="wbar"><i style="width:${p.done / p.total * 100}%"></i></div><small>${p.done} / ${p.total} levels${(S.lv[WORLD_BOSS[w].id] || {}).boss ? ' · 👑 Titan beaten' : ''}</small></div></button>`; }).join('')}</div>
+      <button class="gridbtn" id="toMap"><span class="gbart">${capsuleSVG()}</span><span class="gbtxt"><b>EXPLORE THE GRID</b><small>Catch wild characters, find relics, beat guardians. ${ZONES.filter((_, i) => zState(i).guard).length} / ${ZONES.length} zones cleared.</small></span><span class="gben">${boltIcon}<b>${S.energy || 0}</b>${S.caps ? `<em>${S.caps} capsule${S.caps > 1 ? 's' : ''}!</em>` : ''}</span></button>
+      <div class="worlds">${WORLD_ORDER.map(w => { const p = worldProgress(w); return `<button class="wcard w-${w}" data-w="${w}">${emblem(w)}<div class="wtxt"><h3>${WORLDS[w].name}</h3><p>${WORLDS[w].blurb}</p><div class="wbar"><i style="width:${p.done / p.total * 100}%"></i></div><small>${p.done} / ${p.total} levels${(S.lv[WORLD_BOSS[w].id] || {}).boss ? ' · 👑 Titan beaten' : ''}</small></div></button>`; }).join('')}</div>
     </section>
     <aside class="sidec">
       <div class="card quests"><h3>${ICON.target} Daily Quests</h3><p class="streak">${ICON.flame} ${S.streak.n || 1} day streak</p><div id="questList">${questsHTML()}</div></div>
@@ -112,9 +117,10 @@ function goLobby() {
     </aside></div>`;
   $('#playBtn').onclick = () => { Sfx.tap(); if (nx) { if (Object.values(WORLD_BOSS).includes(nx)) goLevel(nx.id); else goLevel(nx.id); } else goWorld(S.lastWorld || 'math'); };
   $$('.wcard').forEach(b => b.onclick = () => { Sfx.tap(); goWorld(b.dataset.w); });
-  $('#toShop').onclick = openShop; $('#toRoad').onclick = openRoad; $('#toSpeed').onclick = () => startQuiz('speed');
+  $('#toShop').onclick = openShop; $('#toCodex').onclick = () => openCodex(); $('#toMap').onclick = () => { Sfx.tap(); openMap(); }; $('#toRoad').onclick = openRoad; $('#toSpeed').onclick = () => startQuiz('speed');
   $('#questList').onclick = e => { const b = e.target.closest('[data-claim]'); if (!b) return; const q = S.quests.list[+b.dataset.claim], d = QUEST_POOL.find(p => p.id === q.id); q.claimed = true; reward(20, d.coins); Sfx.coin(); toast(`+${d.coins} coins!`); $('#questList').innerHTML = questsHTML(); };
   show('sLobby');
+  if (!S.toured) { S.toured = true; persist(); setTimeout(() => { if (document.body.dataset.screen === 'sLobby') Guide.startTour('sLobby'); }, 900); }
 }
 
 // ─── World map ───
@@ -142,7 +148,8 @@ function goWorld(w) {
 // ─── Level hub ───
 function goLevel(id) {
   const l = level(id), v = lvState(id), isWB = Object.values(WORLD_BOSS).includes(l), k = kindOf(l);
-  const idx = WORLD_LEVELS[l.world].indexOf(l);
+  const idx = WORLD_LEVELS[l.world].indexOf(l); Guide.setCtx(id);
+  const eliteSub = v.elite ? 'Beaten! Replay any time.' : 'Harder: more HP, 2 hearts, faster crits. Win a capsule and +1 star.';
   const card = (n, icon, title, sub, state, act, extra = '') => `<button class="stepcard ${state}" data-act="${act}"><span class="snum">${state === 'done' ? ICON.check : state === 'locked' ? ICON.lock : n}</span><span class="sic">${icon}</span><span class="stxt"><b>${title}</b><small>${sub}</small>${extra}</span></button>`;
   const practiceSub = { quiz: '8 questions. Earn up to 3 stars.', bot: `${l.puzzles ? l.puzzles.length : 0} robot puzzles. Beat par for 3 stars.`, lua: '3 real coding challenges.', lab: 'A hands-on experiment.' }[k];
   const pDone = v.stars > 0;
@@ -150,16 +157,19 @@ function goLevel(id) {
     <p class="eyebrow">${isWB ? `World Boss · ${WORLDS[l.world].name}` : `Level ${idx + 1} · ${l.title}`}</p><h1 class="stroke">${isWB ? l.boss.name : l.name}</h1>${l.std ? `<p class="std">${l.std}</p>` : ''}</div>
     <div class="lvbody">
       <div class="bosspreview card w-${l.world}"><div class="bubble">“${l.boss.taunt}”</div><div class="bossart">${creature(l.boss.look, 'boss')}</div><p class="bname">BOSS: ${l.boss.name}</p></div>
-      <div class="steps">${isWB ? card(1, ICON.sword, `Fight ${l.boss.name}`, `Questions from every level in ${WORLDS[l.world].name}. 3 hearts.`, v.boss ? 'done' : '', 'boss')
+      <div class="steps">${(isWB ? card(1, ICON.sword, `Fight ${l.boss.name}`, `Questions from every level in ${WORLDS[l.world].name}. 3 hearts.`, v.boss ? 'done' : '', 'boss')
         : card(1, ICON.book, 'Learn', 'Short lesson with things to try.', v.learn ? 'done' : '', 'learn')
         + card(2, k === 'lua' ? '⌨️' : k === 'bot' ? '🤖' : k === 'lab' ? '🧪' : '🎯', KIND_LABEL[k], practiceSub, pDone ? 'done' : '', 'practice', `<span class="sstars">${starsHTML(v.stars || 0)}</span>`)
-        + card(3, ICON.sword, `Boss: ${l.boss.name}`, v.learn ? (k === 'bot' ? 'One big puzzle. 3 hearts.' : '3 hearts. Fast answers hit harder!') : 'Finish the lesson first.', v.boss ? 'done' : v.learn ? '' : 'locked', 'boss')}
+        + card(3, ICON.sword, `Boss: ${l.boss.name}`, v.learn ? (k === 'bot' ? 'One big puzzle. 3 hearts.' : '3 hearts. Fast answers hit harder!') : 'Finish the lesson first.', v.boss ? 'done' : v.learn ? '' : 'locked', 'boss'))
+        + ((isWB || k !== 'bot') && v.boss ? card(isWB ? 2 : 4, '💀', 'Elite rematch', eliteSub, v.elite ? 'done' : 'elite', 'elite') : '')}
+      ${Guide.has(id) ? `<div class="row" id="lvEcho">${Guide.btn(id)}</div>` : ''}
       ${!isWB ? `<p class="unlocknote">${isDone(id) ? '✅ Level complete! The next level is unlocked.' : 'Beat the boss <b>or</b> earn 2 stars to unlock the next level.'}</p>` : ''}</div></div>`;
   $('#lvBack').onclick = () => goWorld(l.world);
   $$('#sLevel .stepcard').forEach(b => b.onclick = () => {
     Sfx.tap(); const a = b.dataset.act;
     if (a === 'learn') openLesson(id);
     if (a === 'practice') { if (k === 'bot') openPuzzles(id); else if (k === 'lua') openLua(id); else if (k === 'lab') openLab(id); else startQuiz('practice', id); }
+    if (a === 'elite') startQuiz('boss', id, { elite: true });
     if (a === 'boss') { if (!isWB && !v.learn && !S.unlockAll) { toast('Finish the lesson first. Bosses are tough!'); Sfx.bad(); return; } if (k === 'bot' && !isWB) openBossPuzzle(id); else startQuiz('boss', id); }
   });
   show('sLevel', l.world);
@@ -167,12 +177,12 @@ function goLevel(id) {
 
 // ─── Lessons ───
 let LS = null;
-function openLesson(id) { LS = { id, i: 0, passed: new Set() }; show('sLesson', level(id).world); drawStep(); }
+function openLesson(id) { Guide.setCtx(id); LS = { id, i: 0, passed: new Set() }; show('sLesson', level(id).world); drawStep(); }
 function drawStep() {
   const l = level(LS.id), st = l.lesson[LS.i], n = l.lesson.length, need = st.check && !LS.passed.has(LS.i);
   $('#sLesson').innerHTML = `<div class="card lesson w-${l.world}">
     <div class="lestop"><button class="btn ghost small" id="lesX">✕</button><div class="pips">${l.lesson.map((_, i) => `<i class="${i < LS.i ? 'done' : i === LS.i ? 'on' : ''}"></i>`).join('')}</div><span class="lesn">${LS.i + 1} / ${n}</span></div>
-    <p class="eyebrow">${l.name} · Lesson</p><h2>${st.t}</h2><div class="lesbody">${st.html}</div>
+    <p class="eyebrow">${l.name} · Lesson</p><h2>${st.t}</h2>${LS.i === 0 ? Guide.btn(l.id) : ''}<div class="lesbody">${st.html}</div>
     ${st.widget ? '<div class="widget" id="wid"></div>' : ''}${st.try ? '<div id="tryBox"></div>' : ''}${st.check ? '<div class="check" id="chk"></div>' : ''}
     <div class="lesnav"><button class="btn ghost" id="lesBack" ${LS.i === 0 ? 'disabled' : ''}>Back</button><button class="btn ${need ? '' : 'green'}" id="lesNext" ${need ? 'disabled' : ''}>${LS.i === n - 1 ? 'Finish lesson' : 'Next'}</button></div></div>`;
   if (st.widget) st.widget($('#wid'));
@@ -184,7 +194,7 @@ function drawStep() {
 }
 function finishLesson() {
   const l = level(LS.id), v = lvState(LS.id), first = !v.learn; v.learn = true; persist();
-  if (first) { reward(30, 20); questEvent('learn'); }
+  if (first) { reward(30, 20); questEvent('learn'); gainEnergy(2); }
   Sfx.win(); Confetti.burst(80);
   resultScreen({ world: l.world, face: ICON.book, title: 'LESSON DONE!', sub: `You learned ${l.title.toLowerCase()}. ${kindOf(l) === 'quiz' ? 'Time to practice.' : 'Time to put it to work.'}`, xp: first ? 30 : 0, coins: first ? 20 : 0,
     buttons: [[KIND_LABEL[kindOf(l)] + ' now', () => { if (kindOf(l) === 'bot') openPuzzles(l.id); else if (kindOf(l) === 'lua') openLua(l.id); else if (kindOf(l) === 'lab') openLab(l.id); else startQuiz('practice', l.id); }, ''], ['Back to level', () => goLevel(l.id), 'ghost']] });
@@ -220,19 +230,21 @@ function mountCheck(el, q, onPass) {
 const CHEERS = ['Nice!', 'Nailed it!', 'Boom!', 'Correct!', 'Big brain!', 'Let\'s go!', 'Awesome!', 'Clean!'];
 
 // ─── Quiz player: practice, boss battles, speed run ───
-function startQuiz(mode, id) {
-  const l = id ? level(id) : null, isWB = l && Object.values(WORLD_BOSS).includes(l);
+function startQuiz(mode, id, opt = {}) {
+  const l = opt.l || (id ? level(id) : null), isWB = l && Object.values(WORLD_BOSS).includes(l), pk = perk();
+  const hp0 = opt.hp || (isWB ? l.hp : 100), hp = opt.elite ? Math.round(hp0 * 1.6) : hp0, hearts = (opt.elite ? 2 : 3) + pk.heart;
+  Guide.setCtx(l && !opt.l ? l.id : null);
   const speedPool = () => { const ok = MATH.filter(m => S.lv[m.id] && (S.lv[m.id].learn || isDone(m.id))); return ok.length >= 2 ? ok : MATH.slice(0, 3); };
-  P = { mode, id, l, isWB, i: 0, n: mode === 'practice' ? 8 : 999, pts: 0, right: 0, combo: 0, bestCombo: 0, hp: isWB ? l.hp : 100, maxhp: isWB ? l.hp : 100, hearts: 3, coins: 0, xp: 0, time: 60, state: 'ask', iv: 0 };
-  P.gen = mode === 'speed' ? () => pick(speedPool()).gen() : mode === 'boss' ? bossGen(l) : l.gen;
+  P = { mode, id, l, isWB, i: 0, n: mode === 'practice' ? 8 : 999, pts: 0, right: 0, combo: 0, bestCombo: 0, hp, maxhp: hp, hearts, maxHearts: hearts, opt, pk, coins: 0, xp: 0, time: 60, state: 'ask', iv: 0 };
+  P.gen = mode === 'speed' ? () => pick(speedPool()).gen() : mode === 'boss' ? (opt.l ? l.gen : bossGen(l)) : l.gen;
   const world = l ? l.world : 'math', boss = mode === 'boss';
   show('sPlay', world);
-  $('#sPlay').innerHTML = `<div class="play w-${world} ${boss ? 'isboss' : ''}">
+  $('#sPlay').innerHTML = `<div class="play w-${world} ${boss ? 'isboss' : ''} ${opt.elite ? 'iselite' : ''}">
     <div class="playtop"><button class="btn ghost small" id="quitBtn">✕ Leave</button><div class="phud" id="phud"></div></div>
-    ${boss ? `<div class="arena card"><div class="fighter me"><div class="fart">${creature(hero(S.hero).look)}</div><div class="hearts" id="hearts"></div><p class="fname">${esc(S.name)}</p></div><div class="vs">VS</div><div class="fighter foe"><div class="hpbar"><i id="hpFill"></i><span id="hpTxt"></span></div><div class="fart" id="foeArt">${creature(l.boss.look, 'boss')}</div><p class="fname">${l.boss.name}</p></div><div id="pops"></div></div>` : ''}
+    ${boss ? `<div class="arena card"><div class="fighter me"><div class="fart">${creature(hero(S.hero).look)}</div><div class="hearts" id="hearts"></div><p class="fname">${esc(S.name)}</p></div><div class="vs">VS</div><div class="fighter foe"><div class="hpbar"><i id="hpFill"></i><span id="hpTxt"></span></div><div class="fart" id="foeArt">${creature(l.boss.look, 'boss')}</div><p class="fname">${opt.elite ? '💀 ELITE ' : ''}${l.boss.name}</p></div><div id="pops"></div></div>` : ''}
     ${mode === 'speed' ? '<div class="speedbar"><i id="spFill"></i></div>' : ''}
     <div class="qcard card"><p class="qnum" id="qnum"></p><div class="qtext" id="qtext"></div><div id="ansZone"></div><p class="fmt" id="fmt"></p><div id="fb" aria-live="polite"></div></div></div>`;
-  $('#quitBtn').onclick = () => { stopTimers(); P = null; if (l) goLevel(l.id); else goLobby(); };
+  $('#quitBtn').onclick = () => { stopTimers(); P = null; if (opt.back) opt.back(); else if (l) goLevel(l.id); else goLobby(); };
   if (mode === 'speed') P.iv = setInterval(() => { P.time--; drawPlayHud(); if (P.time <= 0) finishQuiz(); }, 1000);
   nextQ();
 }
@@ -244,7 +256,7 @@ function drawPlayHud() {
   h += P.combo >= 2 ? `<span class="combo">🔥 ${P.combo}x COMBO</span>` : '';
   h += `<span class="pill">${ICON.coin}<b>+${P.coins}</b></span>`;
   $('#phud').innerHTML = h;
-  if (P.mode === 'boss') { $('#hearts').innerHTML = [0, 1, 2].map(i => (i < P.hearts ? ICON.heart : ICON.heartOff)).join(''); $('#hpFill').style.width = Math.max(0, P.hp) / P.maxhp * 100 + '%'; $('#hpTxt').textContent = `${Math.max(0, P.hp)} / ${P.maxhp}`; }
+  if (P.mode === 'boss') { $('#hearts').innerHTML = Array.from({ length: P.maxHearts }, (_, i) => (i < P.hearts ? ICON.heart : ICON.heartOff)).join(''); $('#hpFill').style.width = Math.max(0, P.hp) / P.maxhp * 100 + '%'; $('#hpTxt').textContent = `${Math.max(0, P.hp)} / ${P.maxhp}`; }
 }
 function nextQ() {
   if (!P) return;
@@ -252,7 +264,7 @@ function nextQ() {
   P.q = P.gen(); P.tries = 0; P.state = 'ask'; P.t0 = Date.now();
   $('#qnum').textContent = P.mode === 'practice' ? `Question ${P.i + 1} of ${P.n}` : P.mode === 'speed' ? 'SPEED RUN' : `Round ${P.i + 1}`;
   $('#qtext').innerHTML = P.q.q;
-  const z = $('#ansZone'); z.innerHTML = answerHTML(P.q, { hint: P.mode === 'practice' });
+  const z = $('#ansZone'); z.innerHTML = answerHTML(P.q, { hint: P.mode === 'practice' || (P.mode === 'boss' && P.pk.hint) });
   $('#fmt').textContent = P.q.kind === 'num' ? (P.l && P.l.fmt) || 'Type a number. Fractions like 3/4 and negatives like -5 work too.' : '';
   $('#fb').innerHTML = '';
   wireAnswer(z, P.q, onAnswer);
@@ -265,7 +277,7 @@ function onAnswer(ok, val, btn) {
   const q = P.q, fb = $('#fb'), ai = P.l && P.l.world === 'ai';
   if (P.mode === 'speed') {
     lockAnswers();
-    if (ok) { P.right++; P.combo++; P.coins += 1; P.xp += 5; S.stats.ok++; questEvent('ok'); if (btn) btn.classList.add('right'); Sfx.good(); fb.innerHTML = `<div class="fbx good"><b>${pick(CHEERS)}</b></div>`; P.state = 'wait'; later(() => { P.i++; nextQ(); }, 380); }
+    if (ok) { P.right++; P.combo++; P.coins += 1; P.xp += 5; S.stats.ok++; gainEnergy(1); questEvent('ok'); if (btn) btn.classList.add('right'); Sfx.good(); fb.innerHTML = `<div class="fbx good"><b>${pick(CHEERS)}</b></div>`; P.state = 'wait'; later(() => { P.i++; nextQ(); }, 380); }
     else { P.combo = 0; if (btn) btn.classList.add('wrong'); Sfx.bad(); fb.innerHTML = `<div class="fbx bad"><b>It was ${answerText(q)}</b></div>`; P.state = 'wait'; later(() => { P.i++; nextQ(); }, 1300); }
     drawPlayHud(); return;
   }
@@ -274,8 +286,8 @@ function onAnswer(ok, val, btn) {
     if (ok) {
       const first = P.tries === 0; P.pts += first ? 1 : 0.5; P.right++; P.res[P.i] = true;
       if (first) { P.combo++; P.bestCombo = Math.max(P.bestCombo, P.combo); if (P.combo === 5) questEvent('combo5'); } else P.combo = 0;
-      const c = 2 + (first ? Math.floor(P.combo / 3) : 0); P.coins += c; P.xp += first ? 10 : 5; S.stats.ok++; questEvent('ok'); if (ai) questEvent('ai');
-      lockAnswers(); if (btn) btn.classList.add('right'); Sfx.good(); if (P.combo >= 3 && first) Sfx.coin();
+      const c = 2 + (first ? Math.floor(P.combo / 3) : 0); P.coins += c; P.xp += first ? 10 : 5; S.stats.ok++; gainEnergy(1); questEvent('ok'); if (ai) questEvent('ai');
+      lockAnswers(); if (btn) btn.classList.add('right'); Sfx.good(); if (P.combo >= 3 && first) Sfx.coin(); if (first && (P.combo === 3 || P.combo === 6)) Guide.say(P.combo === 3 ? '🔥 Three in a row. Combo coins are flowing!' : '⚡ SIX in a row?! You\'re on fire.', 2600);
       fb.innerHTML = `<div class="fbx good"><b>${pick(CHEERS)}</b> ${q.why || ''}</div>`; nextBtn(P.i === P.n - 1 ? 'See results' : 'Next');
     } else if (P.tries === 0) {
       P.tries = 1; P.combo = 0; Sfx.bad(); if (btn) { btn.classList.add('wrong'); btn.disabled = true; }
@@ -283,15 +295,15 @@ function onAnswer(ok, val, btn) {
       $('#qtext').closest('.qcard').classList.add('shake'); setTimeout(() => $('#qtext') && $('#qtext').closest('.qcard').classList.remove('shake'), 400);
     } else {
       P.res[P.i] = false; lockAnswers(); if (btn) btn.classList.add('wrong'); if (q.kind === 'choice') $$('#ansZone .choice')[q.correct].classList.add('right'); Sfx.bad();
-      fb.innerHTML = `<div class="fbx info"><b>The answer is ${answerText(q)}.</b> ${q.why || ''}</div>`; nextBtn(P.i === P.n - 1 ? 'See results' : 'Next');
+      fb.innerHTML = `<div class="fbx info"><b>The answer is ${answerText(q)}.</b> ${q.why || ''}${Guide.btn(P.l.id, 'Echo, show me how')}</div>`; nextBtn(P.i === P.n - 1 ? 'See results' : 'Next');
     }
     drawPlayHud(); return;
   }
   // Boss battle: one try each
   lockAnswers();
   if (ok) {
-    const fast = (Date.now() - P.t0) / 1000 < (q.kind === 'choice' ? 8 : 12), dmg = fast ? 30 : 20;
-    P.hp -= dmg; P.right++; P.combo++; P.coins += 3; P.xp += 12; S.stats.ok++; questEvent('ok'); if (ai) questEvent('ai'); if (P.combo === 5) questEvent('combo5');
+    const fast = (Date.now() - P.t0) / 1000 < (q.kind === 'choice' ? 8 : 12) + P.pk.crit - (P.opt.elite ? 3 : 0), dmg = fast ? 30 : 20;
+    P.hp -= dmg; P.right++; P.combo++; P.coins += 3; P.xp += 12; S.stats.ok++; gainEnergy(1); questEvent('ok'); if (ai) questEvent('ai'); if (P.combo === 5) questEvent('combo5');
     if (btn) btn.classList.add('right'); Sfx.hit(); pop(`−${dmg}${fast ? ' CRIT!' : ''}`, 'foe', fast);
     $('#foeArt').classList.add('hit'); setTimeout(() => $('#foeArt') && $('#foeArt').classList.remove('hit'), 450);
     fb.innerHTML = `<div class="fbx good"><b>${fast ? '⚡ CRITICAL HIT!' : pick(CHEERS)}</b> ${q.why || ''}</div>`;
@@ -300,7 +312,7 @@ function onAnswer(ok, val, btn) {
   } else {
     P.hearts--; P.combo = 0; if (btn) btn.classList.add('wrong'); if (q.kind === 'choice') $$('#ansZone .choice')[q.correct].classList.add('right');
     Sfx.bad(); pop('−1 ❤', 'me'); $('.fighter.me .fart').classList.add('hit'); setTimeout(() => $('.fighter.me .fart') && $('.fighter.me .fart').classList.remove('hit'), 450);
-    fb.innerHTML = `<div class="fbx bad"><b>Ouch! The answer was ${answerText(q)}.</b> ${q.why || ''}</div>`;
+    fb.innerHTML = `<div class="fbx bad"><b>Ouch! The answer was ${answerText(q)}.</b> ${q.why || ''}${P.opt.l ? '' : Guide.btn(P.l.id, 'Echo, show me how')}</div>`;
     drawPlayHud();
     if (P.hearts <= 0) { P.state = 'end'; later(finishQuiz, 1400); return; }
   }
@@ -315,7 +327,14 @@ function finishQuiz() {
     reward(p.xp, p.coins); Sfx.win(); if (best && p.right) Confetti.burst();
     return resultScreen({ world: 'math', face: '⚡', title: `${p.right} CORRECT!`, sub: best && p.right ? 'New personal best!' : `Your best is ${S.best.speed}.`, xp: p.xp, coins: p.coins, buttons: [['Go again', () => startQuiz('speed'), ''], ['Lobby', goLobby, 'ghost']] });
   }
+  if (p.opt.onEnd) return p.opt.onEnd(p.hp <= 0, p);
   const l = p.l, v = lvState(l.id);
+  if (p.opt.elite) {
+    if (p.hp <= 0) { const first = !v.elite; v.elite = true; S.stats.boss++; if (first) S.caps = (S.caps || 0) + 1; gainEnergy(5); persist(); questEvent('boss'); const xp = p.xp + (first ? 150 : 40), coins = p.coins + (first ? 80 : 20); reward(xp, coins); Sfx.win(); Confetti.burst(240);
+      return resultScreen({ world: l.world, face: creature(l.boss.look, 'boss ko'), title: 'ELITE VICTORY!', sub: `You crushed Elite <b>${l.boss.name}</b>.${first ? ' <b>+1 capsule</b> and +1 star!' : ''}`, xp, coins, buttons: [first ? ['Open the capsule', () => { goLevel(l.id); openCapsule(); }, ''] : ['Back to level', () => goLevel(l.id), ''], ['Lobby', goLobby, 'ghost']] }); }
+    reward(Math.round(p.xp / 2) + 10, p.coins); Sfx.lose();
+    return resultScreen({ world: l.world, face: creature(l.boss.look, 'boss'), title: 'SO CLOSE', sub: `Elite ${l.boss.name} is no joke. You landed ${p.right} hit${p.right === 1 ? '' : 's'}.`, xp: Math.round(p.xp / 2) + 10, coins: p.coins, lose: true, buttons: [['Rematch', () => startQuiz('boss', l.id, { elite: true }), ''], ['Back to level', () => goLevel(l.id), 'ghost']] });
+  }
   if (p.mode === 'practice') {
     const stars = p.pts >= 7 ? 3 : p.pts >= 5 ? 2 : p.pts >= 3 ? 1 : 0, wasDone = isDone(l.id);
     v.stars = Math.max(v.stars || 0, stars); persist(); reward(p.xp, p.coins);
@@ -324,10 +343,10 @@ function finishQuiz() {
       buttons: [[v.learn ? 'Fight the boss!' : 'Back to level', () => (v.learn ? startQuiz('boss', l.id) : goLevel(l.id)), ''], ['Practice again', () => startQuiz('practice', l.id), 'ghost'], ['Level', () => goLevel(l.id), 'ghost']] });
   }
   if (p.hp <= 0) {
-    const first = !v.boss, wasDone = isDone(l.id); v.boss = true; S.stats.boss++; persist(); questEvent('boss');
+    const first = !v.boss, wasDone = isDone(l.id); v.boss = true; S.stats.boss++; gainEnergy(p.isWB ? 10 : 3); if (first && p.isWB) S.caps = (S.caps || 0) + 2; persist(); questEvent('boss');
     const xp = p.xp + (first ? (p.isWB ? 250 : 100) : 25), coins = p.coins + (first ? (p.isWB ? 150 : 50) : 10); reward(xp, coins); Sfx.win(); Confetti.burst(200);
     const nxt = WORLD_LEVELS[l.world][WORLD_LEVELS[l.world].indexOf(l) + 1];
-    return resultScreen({ world: l.world, face: creature(l.boss.look, 'boss ko'), title: 'VICTORY!', sub: `You beat <b>${l.boss.name}</b>!${first ? ` +${p.isWB ? 5 : 2} stars on the Star Road.` : ''}${!wasDone && !p.isWB ? ' <b>Next level unlocked!</b>' : ''}`, xp, coins,
+    return resultScreen({ world: l.world, face: creature(l.boss.look, 'boss ko'), title: 'VICTORY!', sub: `You beat <b>${l.boss.name}</b>!${first ? ` +${p.isWB ? 5 : 2} stars on the Star Road.${p.isWB ? ' <b>+2 capsules!</b>' : ''}` : ''}${!wasDone && !p.isWB ? ' <b>Next level unlocked!</b>' : ''}`, xp, coins,
       buttons: [nxt && !p.isWB ? [`Next: ${nxt.name}`, () => goLevel(nxt.id), ''] : ['Back to the map', () => goWorld(l.world), ''], ['Lobby', goLobby, 'ghost']] });
   }
   reward(Math.round(p.xp / 2) + 10, p.coins); Sfx.lose();
@@ -338,6 +357,7 @@ function finishQuiz() {
 // ─── Result screen ───
 function resultScreen(o) {
   show('sResult', o.world);
+  if (o.xp) o.xp = boostX(o.xp); if (o.coins) o.coins = boostC(o.coins);
   $('#sResult').innerHTML = `<div class="card result ${o.lose ? 'lose' : ''} w-${o.world || 'math'}"><div class="rays"></div><div class="rface">${o.face && o.face.startsWith('<') ? o.face : `<span class="bigemoji">${o.face || '🏆'}</span>`}</div>
     <h1 class="stroke rtitle">${o.title}</h1>${o.stars != null ? `<div class="rstars">${[0, 1, 2].map(i => `<span class="rs ${i < o.stars ? 'on' : ''}" style="animation-delay:${0.3 + i * 0.25}s">${i < o.stars ? ICON.star : ICON.starOff}</span>`).join('')}</div>` : ''}
     <p class="lead">${o.sub || ''}</p>${o.xp || o.coins ? `<div class="loot">${o.xp ? `<span>${ICON.xp}<b>+${o.xp}</b> XP</span>` : ''}${o.coins ? `<span>${ICON.coin}<b>+${o.coins}</b></span>` : ''}</div>` : ''}
@@ -358,7 +378,7 @@ function openPuzzles(id, pi) {
   botPuzzle($('#botArea'), l.puzzles[pi], res => {
     if (!res.win) return;
     const key = id + ':' + pi, prev = S.puz[key] || {}, allBefore = botStars(l) > 0;
-    if (!prev.done) reward(15, 10); if (res.par && !prev.par) reward(5, 5);
+    if (!prev.done) { reward(15, 10); gainEnergy(2); } if (res.par && !prev.par) reward(5, 5);
     S.puz[key] = { done: true, par: prev.par || res.par };
     const v = lvState(id), st = botStars(l); v.stars = Math.max(v.stars || 0, st); persist();
     const nextI = l.puzzles.findIndex((_, i) => !(S.puz[id + ':' + i] || {}).done);
@@ -409,7 +429,7 @@ function openLua(id, ci) {
       const prev = S.puz[key] || {}; const first = !prev.done; S.puz[key] = { done: true, peek: !!prev.peek };
       const v = lvState(id), stars = l.challenges.filter((_, i) => { const s = S.puz[id + ':c' + i] || {}; return s.done && !s.peek; }).length, all = l.challenges.every((_, i) => (S.puz[id + ':c' + i] || {}).done);
       v.stars = Math.max(v.stars || 0, stars); persist();
-      if (first) reward(25, 15); Sfx.good(); Confetti.burst(60);
+      if (first) { reward(25, 15); gainEnergy(3); } Sfx.good(); Confetti.burst(60);
       const nextI = l.challenges.findIndex((_, i) => !(S.puz[id + ':c' + i] || {}).done);
       $('#lfb').innerHTML = `<div class="fbx good"><b>✅ It works!</b> ${first ? '+25 XP, +15 coins.' : ''}</div><div class="row center">${nextI >= 0 ? `<button class="btn" id="lNext">Challenge ${nextI + 1} ➜</button>` : `<button class="btn" id="lDone">${all && first ? 'See results' : 'Back to level'}</button>`}</div>`;
       $$('#sLua .ptab')[ci].classList.add('done');
@@ -432,7 +452,7 @@ function openLab(id) {
   $('#aBack').onclick = () => goLevel(id);
   l.lab($('#labArea'), stars => {
     const v = lvState(id), first = !v.stars; v.stars = Math.max(v.stars || 0, stars); persist();
-    reward(first ? 20 * stars + 20 : 10, first ? 10 * stars + 10 : 5); questEvent('ai', stars); Sfx.win(); Confetti.burst();
+    reward(first ? 20 * stars + 20 : 10, first ? 10 * stars + 10 : 5); questEvent('ai', stars); gainEnergy(first ? 3 * stars : 1); persist(); Sfx.win(); Confetti.burst();
     resultScreen({ world: 'ai', face: '🧪', title: 'LAB COMPLETE!', sub: stars < 3 ? 'Finish each step on your first try for 3 stars.' : 'Every step on the first try. Genius!', stars, buttons: [['Fight the boss!', () => (v.learn ? startQuiz('boss', id) : goLevel(id)), ''], ['Back to level', () => goLevel(id), 'ghost']] });
   });
 }
@@ -442,10 +462,12 @@ function openShop() {
   show('sShop');
   const ts = totalStars();
   $('#sShop').innerHTML = `<div class="card shophead"><button class="btn ghost small" id="sBack">← Lobby</button><h1 class="stroke">Heroes</h1><span class="pill big">${ICON.coin}<b>${S.coins.toLocaleString()}</b></span></div>
-    <div class="herogrid">${HEROES.map(h => { const own = S.owned.includes(h.id), eq = S.hero === h.id;
+    <div class="herogrid">${HEROES.filter(h => !h.wild).map(h => { const own = S.owned.includes(h.id), eq = S.hero === h.id;
       const btn = eq ? '<button class="btn small" disabled>Equipped</button>' : own ? `<button class="btn small green" data-eq="${h.id}">Equip</button>` : h.road ? `<button class="btn small ghost" disabled>${ICON.star} ${h.road} on Star Road</button>` : `<button class="btn small ${S.coins >= h.cost ? '' : 'ghost'}" data-buy="${h.id}" ${S.coins >= h.cost ? '' : 'disabled'}>${h.cost ? `${ICON.coin} ${h.cost}` : 'Free'}</button>`;
-      return `<div class="herocard ${own ? '' : 'notown'} ${eq ? 'equipped' : ''}"><div class="hart">${creature(h.look)}</div><b>${h.name}</b><small>${h.role}</small>${btn}</div>`; }).join('')}</div>
-    <p class="note center">Earn coins from lessons, practice, puzzles, bosses and daily quests. ${ts < 40 ? 'Some heroes only unlock on the Star Road.' : ''}</p>`;
+      return `<div class="herocard ${own ? '' : 'notown'} ${eq ? 'equipped' : ''}"><div class="hart">${creature(h.look)}</div><b>${h.name}</b><small>${h.role}</small>${rarTag(h)}<small class="pk">${perkText(h)}</small>${btn}</div>`; }).join('')}</div>
+    <p class="note center">Earn coins from lessons, practice, puzzles, bosses and daily quests. ${ts < 40 ? 'Some heroes only unlock on the Star Road.' : ''}</p>
+    <div class="row center"><button class="btn cyan" id="sCodexBtn">${HEROES.filter(h => h.wild).length} more characters live on the Grid ➜</button></div>`;
+  $('#sCodexBtn').onclick = openMap;
   $('#sBack').onclick = goLobby;
   $$('#sShop [data-eq]').forEach(b => b.onclick = () => { S.hero = b.dataset.eq; persist(); Sfx.tap(); openShop(); });
   $$('#sShop [data-buy]').forEach(b => b.onclick = () => { const h = hero(b.dataset.buy); if (S.coins < h.cost) return; S.coins -= h.cost; S.owned.push(h.id); S.hero = h.id; persist(); Sfx.coin(); Confetti.burst(100); toast(`<b>${h.name}</b> joined your team!`); openShop(); });
@@ -458,10 +480,10 @@ function openRoad() {
   $('#sRoad').innerHTML = `<div class="card shophead"><button class="btn ghost small" id="rBack">← Lobby</button><h1 class="stroke">Star Road</h1><span class="pill big">${ICON.star}<b>${ts}</b></span></div>
     <p class="note center">Earn stars from practice (up to 3 per level), bosses (+2) and world Titans (+5). Rewards unlock as you climb.</p>
     <div class="road">${ROAD.map(r => { const got = S.road.includes(r.at), ready = !got && ts >= r.at;
-      const art = r.hero ? `<div class="rhero">${creature(hero(r.hero).look)}</div><b>${hero(r.hero).name}</b>` : `<div class="rcoins">${ICON.coin}</div><b>${r.coins} coins</b>`;
+      const art = r.hero ? `<div class="rhero">${creature(hero(r.hero).look)}</div><b>${hero(r.hero).name}</b>` : r.caps ? `<div class="rhero">${capsuleSVG()}</div><b>${r.caps} capsule${r.caps > 1 ? 's' : ''}</b>` : `<div class="rcoins">${ICON.coin}</div><b>${r.coins} coins</b>`;
       return `<div class="rstop ${got ? 'got' : ready ? 'ready' : 'locked'}"><span class="rat">${ICON.star}${r.at}</span>${art}${got ? `<span class="rok">${ICON.check}</span>` : ready ? `<button class="btn small green" data-at="${r.at}">Claim</button>` : `<small>${r.at - ts} more</small>`}</div>`; }).join('')}</div>`;
   $('#rBack').onclick = goLobby;
-  $$('#sRoad [data-at]').forEach(b => b.onclick = () => { const r = ROAD.find(x => x.at === +b.dataset.at); S.road.push(r.at); if (r.hero) { if (!S.owned.includes(r.hero)) S.owned.push(r.hero); toast(`<b>${hero(r.hero).name}</b> unlocked! Equip it in the shop.`); } else { S.coins += r.coins; toast(`+${r.coins} coins!`); } persist(); Sfx.coin(); Confetti.burst(120); openRoad(); });
+  $$('#sRoad [data-at]').forEach(b => b.onclick = () => { const r = ROAD.find(x => x.at === +b.dataset.at); S.road.push(r.at); if (r.hero) { if (!S.owned.includes(r.hero)) S.owned.push(r.hero); toast(`<b>${hero(r.hero).name}</b> unlocked! Equip it in the shop.`); } else if (r.caps) { S.caps = (S.caps || 0) + r.caps; toast(`+${r.caps} capsule${r.caps > 1 ? 's' : ''}! Open them on the Grid.`); } else { S.coins += r.coins; toast(`+${r.coins} coins!`); } persist(); Sfx.coin(); Confetti.burst(120); openRoad(); });
 }
 
 // ─── Grown-ups ───
@@ -471,13 +493,15 @@ function openParents() {
   $('#sParents').innerHTML = `<div class="card shophead"><button class="btn ghost small" id="pBack">← Lobby</button><h1 class="stroke">For Grown-ups</h1></div>
     <div class="card parents">
       <p><b>${esc(S.name || 'Your player')}</b> is level ${levelOf(S.xp) + 1} with ${totalStars()} stars, ${S.stats.ok} correct answers, ${S.stats.lua} Lua runs, and ${S.stats.boss} bosses beaten. Current streak: ${S.streak.n || 1} day(s).</p>
-      ${['math', 'code', 'ai'].map(w => `<h3>${WORLDS[w].name}</h3><table class="ptable"><tr><th>Level</th><th>Lesson</th><th>Stars</th><th>Boss</th></tr>${WORLD_LEVELS[w].map(row).join('')}<tr><td>${WORLD_BOSS[w].boss.name}<small>World boss</small></td><td></td><td></td><td>${(S.lv[WORLD_BOSS[w].id] || {}).boss ? '✅' : '·'}</td></tr></table>`).join('')}
+      ${WORLD_ORDER.map(w => `<h3>${WORLDS[w].name}</h3><table class="ptable"><tr><th>Level</th><th>Lesson</th><th>Stars</th><th>Boss</th></tr>${WORLD_LEVELS[w].map(row).join('')}<tr><td>${WORLD_BOSS[w].boss.name}<small>World boss</small></td><td></td><td></td><td>${(S.lv[WORLD_BOSS[w].id] || {}).boss ? '✅' : '·'}</td></tr></table>`).join('')}
       <h3>Settings</h3>
       <div class="row wrap"><button class="btn small ${S.sound ? 'green' : 'ghost'}" id="pSound">Sound: ${S.sound ? 'on' : 'off'}</button><button class="btn small ${S.unlockAll ? 'green' : 'ghost'}" id="pUnlock">Unlock all levels: ${S.unlockAll ? 'on' : 'off'}</button><button class="btn small pink" id="pReset">Reset all progress</button></div>
       <h3>About Brain Brawl</h3>
       <ul class="about"><li><b>Math Arena</b> covers the Common Core grade 6 domains (ratios, the number system, expressions and equations, geometry, statistics) plus a few grade 7 skills. Standards are listed on each level.</li>
+      <li><b>Algebra Peaks</b> goes further: proportions and percent change, multi-step equations, circles, volume, probability, exponent laws and scientific notation, the Pythagorean theorem, slope and linear functions, and systems of equations (grades 7 and 8).</li>
+      <li><b>Echo</b> is the guide character in the corner. It can point things out on screen and play short animated explanations. Its voice uses the browser's built-in text-to-speech and can be turned off from its menu. <b>The Grid</b> is an exploration map: correct answers earn energy, which is spent to reveal tiles and battle for collectible characters. Everything is earned by playing. There are no purchases.</li>
       <li><b>Code Lab</b> starts with block coding (sequences, loops, conditionals) and moves to real Lua 5.3, which matches the basics of Luau, the language used in Roblox Studio. Code runs only inside this page.</li>
-      <li><b>AI Academy</b> follows the AI4K12 "Five Big Ideas" and teaches prompting, fact-checking, privacy and bias. <b>No real chatbot is connected.</b> All AI replies are pre-written, so nothing your child types leaves the device.</li>
+      <li><b>AI Academy</b> follows the AI4K12 "Five Big Ideas" and teaches prompting, fact-checking, privacy and bias, then goes deeper into tokens, context windows, neural networks, how training works, advanced prompting, and using AI as a tutor instead of a shortcut. <b>No real chatbot is connected.</b> All AI replies are pre-written, so nothing your child types leaves the device.</li>
       <li>A good pace is one level every few days, 15 to 20 minutes at a time. Progress saves in this browser only. No accounts, no ads, no data collected.</li></ul>
     </div>`;
   $('#pBack').onclick = goLobby;
@@ -496,7 +520,8 @@ document.addEventListener('keydown', e => {
 function boot() {
   $('#hudMe').onclick = openShop; $('#navHome').onclick = goLobby; $('#navShop').onclick = openShop; $('#navRoad').onclick = openRoad; $('#navParents').onclick = openParents;
   $('#navSound').onclick = () => { S.sound = !S.sound; persist(); renderHUD(); toast(S.sound ? '🔊 Sound on' : '🔇 Sound off'); };
-  ensureQuests();
+  $('#navMap').onclick = () => { Sfx.tap(); openMap(); };
+  Guide.mount(); ensureQuests();
   if (S.name) goLobby(); else renderStart();
 }
 boot();

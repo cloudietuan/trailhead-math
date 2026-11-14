@@ -22,6 +22,11 @@ function creature(look = {}, cls = '') {
   if (acc === 'horns') back += `<path d="M32 46 Q14 30 22 10 Q30 30 46 36 Z" fill="#F4FBFF" ${sw}/><path d="M88 46 Q106 30 98 10 Q90 30 74 36 Z" fill="#F4FBFF" ${sw}/>`;
   if (acc === 'ears') back += `<path d="M27 52 L30 16 L54 36 Z" fill="${c}" ${sw}/><path d="M93 52 L90 16 L66 36 Z" fill="${c}" ${sw}/><path d="M33 44 L34 27 L45 37 Z" fill="#FF8FB1"/><path d="M87 44 L86 27 L75 37 Z" fill="#FF8FB1"/>`;
   if (acc === 'spikes') back += `<path d="M28 44 L36 16 L48 36 L58 8 L68 34 L80 14 L90 44 Z" fill="${d}" ${sw}/>`;
+  if (acc === 'jet') back += `<rect x="8" y="50" width="18" height="40" rx="8" fill="#C9D2F0" ${sw}/><rect x="94" y="50" width="18" height="40" rx="8" fill="#C9D2F0" ${sw}/><path class="flick" d="M10 90 Q17 116 24 90 Z" fill="#FFC93C" ${sw}/><path class="flick" d="M96 90 Q103 116 110 90 Z" fill="#FFC93C" ${sw}/>`;
+  if (acc === 'cape') back += `<path d="M28 46 Q4 80 12 118 Q40 108 60 116 Q80 108 108 118 Q116 80 92 46 Z" fill="${look.cape || '#FF4F7B'}" ${sw}/>`;
+  if (acc === 'fin') back += `<path d="M48 36 Q58 2 82 8 Q70 22 76 36 Z" fill="${d}" ${sw}/>`;
+  if (acc === 'mohawk') back += `<path d="M40 38 Q38 14 50 22 Q52 4 62 18 Q70 2 74 20 Q86 14 80 38 Z" fill="${look.hair || '#3DD6FF'}" ${sw}/>`;
+  if (acc === 'tail') back += `<path d="M96 96 Q122 96 114 70 Q110 60 104 66" fill="none" stroke="${INK}" stroke-width="13" stroke-linecap="round"/><path d="M96 96 Q122 96 114 70 Q110 60 104 66" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
   if (acc === 'wings') back += `<path d="M24 62 Q2 40 8 70 Q14 88 28 80 Z" fill="${l}" ${sw}/><path d="M96 62 Q118 40 112 70 Q106 88 92 80 Z" fill="${l}" ${sw}/>`;
   // Shadow, feet, arms, body
   let s = `<ellipse cx="60" cy="124" rx="36" ry="6" fill="rgba(0,0,0,.28)"/>`;
@@ -44,6 +49,9 @@ function creature(look = {}, cls = '') {
   if (eyes === 'glitch') face += eye(45, 62, 10, 12) + eye(75, 62, 10, 12) + `<rect x="26" y="40" width="6" height="6" fill="#3DD6FF"/><rect x="90" y="88" width="6" height="6" fill="#FFC93C"/><rect x="84" y="40" width="5" height="5" fill="#5BE36B"/>`;
   if (eyes === 'angry') face += eye(45, 63, 10, 11, 1, 3) + eye(75, 63, 10, 11, -1, 3) + `<path d="M33 48 L54 56 M87 48 L66 56" stroke="${INK}" stroke-width="6" stroke-linecap="round"/>`;
   if (eyes === 'sleepy') face += `<path d="M36 62 Q45 68 54 62 M66 62 Q75 68 84 62" stroke="${INK}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  if (eyes === 'star') face += `<path d="M45 49 l3.6 8 8.6 1 -6.4 5.8 1.8 8.6 -7.6 -4.4 -7.6 4.4 1.8 -8.6 -6.4 -5.8 8.6 -1z" fill="#FFE14D" ${sw}/><path d="M75 49 l3.6 8 8.6 1 -6.4 5.8 1.8 8.6 -7.6 -4.4 -7.6 4.4 1.8 -8.6 -6.4 -5.8 8.6 -1z" fill="#FFE14D" ${sw}/>`;
+  if (eyes === 'cyber') face += `<rect x="26" y="52" width="68" height="18" rx="9" fill="#0B0826" ${sw}/><rect class="scan" x="34" y="57" width="16" height="8" rx="4" fill="#FF4F7B"/><rect x="56" y="57" width="6" height="8" rx="3" fill="#7FF8FF" opacity=".7"/><rect x="68" y="57" width="6" height="8" rx="3" fill="#7FF8FF" opacity=".4"/>`;
+  if (eyes === 'happy') face += `<path d="M36 66 Q45 54 54 66 M66 66 Q75 54 84 66" stroke="${INK}" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="76" rx="6" ry="3.5" fill="#FF8FB1" opacity=".8"/><ellipse cx="86" cy="76" rx="6" ry="3.5" fill="#FF8FB1" opacity=".8"/>`;
   if (eyes === 'visor') face += `<rect x="27" y="46" width="66" height="32" rx="15" fill="#5FD8FF" ${sw}/><path d="M34 54 Q44 48 56 50 L40 70 Q32 66 34 54 Z" fill="#fff" opacity=".55"/><circle cx="50" cy="63" r="4" fill="${INK}"/><circle cx="70" cy="63" r="4" fill="${INK}"/>`;
   // Mouth
   const m = look.mouth || 'smile';
@@ -59,7 +67,11 @@ function creature(look = {}, cls = '') {
   if (acc === 'headband') front += `<rect x="19" y="40" width="82" height="11" rx="5" fill="#FF4F7B" ${sw}/>`;
   if (acc === 'goggles') front += `<rect x="19" y="36" width="82" height="8" fill="#3B2F86"/><circle cx="44" cy="40" r="11" fill="#9FF0FF" ${sw}/><circle cx="76" cy="40" r="11" fill="#9FF0FF" ${sw}/>`;
   if (acc === 'bolt') front += `<path d="M64 6 L48 30 L60 30 L54 46 L74 20 L62 20 Z" fill="#FFE14D" ${sw}/>`;
-  return `<svg class="creature ${cls}" viewBox="0 -4 120 134" aria-hidden="true">${s}${face}${front}</svg>`;
+  if (acc === 'halo') front += `<ellipse cx="60" cy="16" rx="26" ry="7" fill="none" stroke="${INK}" stroke-width="9"/><ellipse cx="60" cy="16" rx="26" ry="7" fill="none" stroke="#FFE14D" stroke-width="4"/>`;
+  if (acc === 'helmet') front += `<path d="M18 62 Q16 18 60 18 Q104 18 102 62" fill="rgba(160,240,255,.28)" ${sw}/><path d="M30 40 Q40 26 56 25" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/><rect x="14" y="58" width="92" height="9" rx="4" fill="#C9D2F0" ${sw}/>`;
+  if (acc === 'tophat') front += `<rect x="38" y="6" width="44" height="30" rx="4" fill="#1B1440" ${sw}/><rect x="26" y="32" width="68" height="9" rx="4" fill="#1B1440" ${sw}/><rect x="38" y="24" width="44" height="7" fill="#FF4F7B"/>`;
+  const glow = look.glow ? ` style="filter:drop-shadow(0 0 5px ${look.glow}) drop-shadow(0 0 12px ${look.glow})"` : '';
+  return `<svg class="creature ${cls}" viewBox="0 -4 120 134" aria-hidden="true"${glow}>${s}${face}${front}</svg>`;
 }
 
 const HEROES = [
@@ -75,6 +87,61 @@ const HEROES = [
   { id: 'zap', name: 'Zap', role: 'Storm', cost: -1, road: 40, look: { color: '#FFE14D', acc: 'bolt', eyes: 'big', mouth: 'grin', spots: true } },
   { id: 'king', name: 'King Byte', role: 'Royal', cost: -1, road: 100, look: { color: '#FFC93C', acc: 'crown', mouth: 'grin', belly: true } },
 ];
+// Rarity for the original squad
+const BASE_RAR = { bolt: 'common', pixel: 'common', blaze: 'common', kit: 'rare', nova: 'rare', rex: 'rare', frost: 'epic', glitch: 'epic', ace: 'epic', zap: 'legendary', king: 'legendary' };
+HEROES.forEach(h => (h.rar = BASE_RAR[h.id]));
+// Wild characters: found on the Explore map, in capsules, or by beating zone guardians. Not sold in the shop.
+// zone: which Explore zone they roam (0-5). guard: only from that zone's guardian. cap: only from capsules.
+const WILD = [
+  { id: 'dot', name: 'Dot', role: 'Pixel Sprite', rar: 'common', zone: 0, look: { color: '#7FF8FF', eyes: 'happy', mouth: 'smile' } },
+  { id: 'gus', name: 'Gus', role: 'Dock Bot', rar: 'common', zone: 0, look: { color: '#C9D2F0', eyes: 'robot', mouth: 'flat', acc: 'cap', cap: '#FF8A3D' } },
+  { id: 'fizz', name: 'Fizz', role: 'Soda Slime', rar: 'common', zone: 0, look: { color: '#FF8FB1', eyes: 'big', mouth: 'o', belly: true } },
+  { id: 'wave', name: 'Wave', role: 'Surfer', rar: 'rare', zone: 0, look: { color: '#3DA8FF', eyes: 'happy', mouth: 'grin', acc: 'fin' } },
+  { id: 'neon', name: 'Neon', role: 'Sign Spirit', rar: 'epic', zone: 0, look: { color: '#FF4FD8', eyes: 'cyber', mouth: 'smile', acc: 'mohawk', hair: '#7FF8FF', glow: '#FF4FD8' } },
+  { id: 'admiral', name: 'Admiral Hex', role: 'Harbor Guardian', rar: 'legendary', zone: 0, guard: true, look: { color: '#2B59C3', eyes: 'angry', mouth: 'teeth', acc: 'tophat', glow: '#3DD6FF' } },
+
+  { id: 'chip', name: 'Chip', role: 'Circuit Bug', rar: 'common', zone: 1, look: { color: '#5BE36B', eyes: 'three', mouth: 'smile', acc: 'antenna' } },
+  { id: 'spark', name: 'Sparkplug', role: 'Mechanic', rar: 'common', zone: 1, look: { color: '#FFC93C', eyes: 'big', mouth: 'grin', acc: 'goggles' } },
+  { id: 'loop', name: 'Loop', role: 'Repeat Bot', rar: 'rare', zone: 1, look: { color: '#4FD18B', eyes: 'robot', mouth: 'o', acc: 'tail' } },
+  { id: 'syntax', name: 'Syntax', role: 'Code Ninja', rar: 'rare', zone: 1, look: { color: '#1F2A44', eyes: 'cyber', mouth: 'flat', acc: 'headband' } },
+  { id: 'cache', name: 'Cache', role: 'Jet Courier', rar: 'epic', zone: 1, look: { color: '#7CF06B', eyes: 'visor', mouth: 'grin', acc: 'jet', glow: '#5BE36B' } },
+  { id: 'root', name: 'Root', role: 'Canyon Guardian', rar: 'legendary', zone: 1, guard: true, look: { color: '#0FA36B', eyes: 'cyber', mouth: 'fangs', acc: 'spikes', glow: '#5BE36B', spots: true } },
+
+  { id: 'facet', name: 'Facet', role: 'Crystal Kid', rar: 'common', zone: 2, look: { color: '#BDEBFF', eyes: 'star', mouth: 'smile' } },
+  { id: 'peak', name: 'Peak', role: 'Climber', rar: 'common', zone: 2, look: { color: '#FF8A3D', eyes: 'happy', mouth: 'grin', acc: 'headband' } },
+  { id: 'echo2', name: 'Yodel', role: 'Mountain Echo', rar: 'rare', zone: 2, look: { color: '#A070FF', eyes: 'big', mouth: 'o', acc: 'horns' } },
+  { id: 'prism', name: 'Prism', role: 'Light Bender', rar: 'epic', zone: 2, look: { color: '#F4FBFF', eyes: 'star', mouth: 'grin', acc: 'halo', glow: '#FFE14D' } },
+  { id: 'yeti', name: 'Sir Yeti', role: 'Peak Guardian', rar: 'legendary', zone: 2, guard: true, look: { color: '#E8F6FF', eyes: 'angry', mouth: 'fangs', acc: 'horns', belly: true, glow: '#9FE3FF' } },
+
+  { id: 'bit', name: 'Bit', role: 'Data Mote', rar: 'common', zone: 3, look: { color: '#3DD6FF', eyes: 'one', mouth: 'smile' } },
+  { id: 'token', name: 'Token', role: 'Word Muncher', rar: 'rare', zone: 3, look: { color: '#B26BFF', eyes: 'big', mouth: 'teeth', acc: 'ears' } },
+  { id: 'synapse', name: 'Synapse', role: 'Neural Spark', rar: 'rare', zone: 3, look: { color: '#FF6BD5', eyes: 'happy', mouth: 'smile', acc: 'bolt' } },
+  { id: 'astra', name: 'Astra', role: 'Star Pilot', rar: 'epic', zone: 3, look: { color: '#EEF1FF', eyes: 'visor', mouth: 'smile', acc: 'helmet', glow: '#A070FF' } },
+  { id: 'oracle', name: 'The Oracle', role: 'Nebula Guardian', rar: 'legendary', zone: 3, guard: true, look: { color: '#5B3FD1', eyes: 'one', mouth: 'flat', acc: 'halo', glow: '#B26BFF' } },
+
+  { id: 'vex', name: 'Vex', role: 'Variable Imp', rar: 'rare', zone: 4, look: { color: '#FF4F7B', eyes: 'glitch', mouth: 'fangs', acc: 'tail' } },
+  { id: 'delta', name: 'Delta', role: 'Slope Rider', rar: 'rare', zone: 4, look: { color: '#FFE14D', eyes: 'focus', mouth: 'grin', acc: 'fin' } },
+  { id: 'sigma', name: 'Sigma', role: 'Sum Knight', rar: 'epic', zone: 4, look: { color: '#8C7CFF', eyes: 'angry', mouth: 'flat', acc: 'cape', cape: '#FFC93C', glow: '#8C7CFF' } },
+  { id: 'abyss', name: 'Lord Radical', role: 'Abyss Guardian', rar: 'legendary', zone: 4, guard: true, look: { color: '#241A5E', eyes: 'cyber', mouth: 'teeth', acc: 'cape', cape: '#FF4F7B', glow: '#FF4F7B' } },
+
+  { id: 'quark', name: 'Quark', role: 'Core Spark', rar: 'epic', zone: 5, look: { color: '#FF8A3D', eyes: 'star', mouth: 'o', acc: 'flame', glow: '#FFC93C' } },
+  { id: 'nyx', name: 'Nyx', role: 'Void Walker', rar: 'epic', zone: 5, look: { color: '#161032', eyes: 'cyber', mouth: 'smile', acc: 'wings', glow: '#7FF8FF' } },
+  { id: 'omega', name: 'Omega', role: 'Titan Core', rar: 'mythic', zone: 5, guard: true, look: { color: '#FFFFFF', eyes: 'star', mouth: 'grin', acc: 'crown', glow: '#FF4FD8', belly: true } },
+
+  { id: 'mint', name: 'Mint', role: 'Capsule Critter', rar: 'rare', cap: true, look: { color: '#8FF5D2', eyes: 'happy', mouth: 'smile', acc: 'sprout' } },
+  { id: 'turbo', name: 'Turbo', role: 'Rocket Pup', rar: 'epic', cap: true, look: { color: '#FFB21E', eyes: 'happy', mouth: 'grin', acc: 'jet', belly: true } },
+  { id: 'holo', name: 'Holo', role: 'Hologram', rar: 'legendary', cap: true, look: { color: '#7FF8FF', eyes: 'cyber', mouth: 'smile', acc: 'helmet', glow: '#7FF8FF' } },
+  { id: 'paradox', name: 'Paradox', role: 'Time Glitch', rar: 'mythic', cap: true, look: { color: '#B26BFF', eyes: 'glitch', mouth: 'grin', acc: 'halo', glow: '#FFE14D', spots: true } },
+];
+WILD.forEach(h => { h.cost = -1; h.wild = true; HEROES.push(h); });
+const RARITY = {
+  common: { name: 'Common', color: '#B9C4D6', coin: 0, crit: 0, heart: 0, dupe: 20, w: 60 },
+  rare: { name: 'Rare', color: '#3DD6FF', coin: 0.1, crit: 0, heart: 0, dupe: 50, w: 27 },
+  epic: { name: 'Epic', color: '#B26BFF', coin: 0.2, crit: 2, heart: 0, dupe: 120, w: 10 },
+  legendary: { name: 'Legendary', color: '#FFC93C', coin: 0.3, crit: 2, heart: 1, dupe: 300, w: 2.6 },
+  mythic: { name: 'Mythic', color: '#FF4FD8', coin: 0.5, crit: 3, heart: 1, dupe: 800, w: 0.4 },
+};
+const perkText = h => { const r = RARITY[h.rar]; const p = []; if (r.coin) p.push(`+${Math.round(r.coin * 100)}% coins`); if (r.crit) p.push(`+${r.crit}s crit time`); if (r.heart) p.push('+1 boss heart'); return p.join(' · ') || 'No bonus'; };
 const hero = id => HEROES.find(h => h.id === id) || HEROES[0];
 
 const ICON = {
@@ -106,5 +173,6 @@ function emblem(world) {
 const WORLDS = {
   math: { name: 'Math Arena', short: 'Math', color: '#FF8A3D', glyph: 'x²', glyphSize: 34, blurb: 'Negatives, ratios, percents, equations and more. 6th grade and up.' },
   code: { name: 'Code Lab', short: 'Code', color: '#5BE36B', glyph: '{ }', glyphSize: 32, glyphY: 62, blurb: 'Program a robot, then write real Lua, the language behind Roblox games.' },
-  ai: { name: 'AI Academy', short: 'AI', color: '#3DD6FF', glyph: 'AI', glyphSize: 34, blurb: 'How AI learns, how chatbots talk, better prompts, and staying safe.' },
+  math2: { name: 'Algebra Peaks', short: 'Algebra', color: '#FF4FD8', glyph: 'π', glyphSize: 44, glyphY: 66, blurb: 'The hard stuff: multi-step equations, circles, slope, Pythagoras, systems. 7th and 8th grade.' },
+  ai: { name: 'AI Academy', short: 'AI', color: '#3DD6FF', glyph: 'AI', glyphSize: 34, blurb: 'How AI really works inside, how to prompt like a pro, and how to use it to learn and build.' },
 };

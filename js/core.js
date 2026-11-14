@@ -52,7 +52,8 @@ const LEVELS = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000, 5000,
 const TITLES = ['Rookie', 'Challenger', 'Brawler', 'Thinker', 'Solver', 'Builder', 'Hacker', 'Strategist', 'Champion', 'Mastermind', 'Legend', 'Mythic', 'Grandmaster', 'Titan', 'Brain Boss', 'Ultra Brain'];
 function freshSave() {
   return { name: '', hero: 'bolt', owned: ['bolt'], coins: 0, xp: 0, lv: {}, puz: {}, sound: true, unlockAll: false,
-    quests: null, streak: { day: '', n: 0 }, stats: { ok: 0, lua: 0, bot: 0, boss: 0, speed: 0 }, road: [], made: Date.now() };
+    quests: null, streak: { day: '', n: 0 }, stats: { ok: 0, lua: 0, bot: 0, boss: 0, speed: 0 }, road: [], made: Date.now(),
+    energy: 12, caps: 1, relics: [], badges: [], ex: { z: {} }, toured: false };
 }
 function loadSave() {
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.lv) return Object.assign(freshSave(), s); } catch (e) {}
