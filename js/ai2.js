@@ -146,7 +146,7 @@ function neuronLab(el, done) {
     const upd = () => {
       const res = ROWS.map(r => fire(r, w) === want(r)), all = res.every(Boolean);
       el.querySelector('.nlive').innerHTML = `${net(w)}
-      <table class="rt nrows"><tr><th>Homework</th><th>Rain</th><th>Friend</th><th>Total</th><th>Neuron says</th><th>Should be</th><th></th></tr>${ROWS.map((r, i) => `<tr class="${res[i] ? 'ok' : 'no'}"><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[0] * w[0] + r[1] * w[1] + r[2] * w[2]}</td><td>${fire(r, w) ? 'GO' : 'NO'}</td><td>${want(r) ? 'GO' : 'NO'}</td><td>${res[i] ? '✓' : '✗'}</td></tr>`).join('')}</table>
+      <div class="nrowwrap"><table class="rt nrows"><tr><th>Home&shy;work</th><th>Rain</th><th>Friend</th><th>Total</th><th>Says</th><th>Should</th><th></th></tr>${ROWS.map((r, i) => `<tr class="${res[i] ? 'ok' : 'no'}"><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[0] * w[0] + r[1] * w[1] + r[2] * w[2]}</td><td>${fire(r, w) ? 'GO' : 'NO'}</td><td>${want(r) ? 'GO' : 'NO'}</td><td>${res[i] ? '✓' : '✗'}</td></tr>`).join('')}</table></div>
       <p class="big ${all ? 'good' : 'bad'}">${res.filter(Boolean).length} of ${ROWS.length} correct</p>
       ${all ? `<p>You did by hand what training does automatically: you found weights that turn inputs into the right answer. Rain got a <b>negative</b> weight (it counts against), and "friend online" can sit at <b>zero</b> (ignored).</p><div class="row center"><button class="btn next">Next step</button></div>` : '<p class="note">Hint: which input should push the total UP? Which one should push it DOWN? Which one should do nothing?</p>'}`;
       if (all) el.querySelector('.next').onclick = () => { Sfx.good(); if (moves <= 16) stars++; s2(); };

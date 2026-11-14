@@ -222,3 +222,5 @@ sup { font-size: .62em; }
 .orun.jumping { transition: left .3s linear; animation: ojump .3s ease-out; } @keyframes ojump { 50% { transform: translateY(calc(var(--cell) * -.9)); } }
 .orun.fell { animation: ofall .7s ease-in forwards; } @keyframes ofall { to { transform: translateY(calc(var(--cell) * 1.2)) rotate(40deg); opacity: 0; } }
 @media (max-width: 760px) { .repgrid { grid-template-columns: repeat(2, 1fr); } .reptwo { grid-template-columns: 1fr; } }
+.nrowwrap { max-width: 100%; overflow-x: auto; }
+@media (max-width: 760px) { .nrows { font-size: 12.5px; } .nrows td, .nrows th { padding: 3px 4px; } .labcard { padding: 14px; } }
